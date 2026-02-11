@@ -1,0 +1,17 @@
+{
+  "name": "mdpdf-template-builder",
+  "version": "1.0.0",
+  "description": "Visual template builder for md2pdf",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.0",
+    "express": "^4.21.0",
+    "highlight.js": "^11.10.0",
+    "marked": "^15.0.0",
+    "ws": "^8.18.0"
+  }
+}
