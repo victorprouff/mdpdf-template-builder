@@ -1,11 +1,52 @@
+/* ── Theme variables ── */
+:root {
+  --bg-body: #1a1a2e;
+  --bg-toolbar: #16213e;
+  --bg-panel: #16213e;
+  --bg-surface: #12121f;
+  --bg-input: #0f3460;
+  --bg-input-hover: #1a1a5e;
+  --border-main: #0f3460;
+  --border-input: #1a1a5e;
+  --border-preview: #333;
+  --text-primary: #e0e0e0;
+  --text-secondary: #aaa;
+  --text-muted: #888;
+  --text-heading: #ccc;
+  --text-success: #4ecca3;
+  --accent: #e94560;
+  --accent-text: #fff;
+  --bg-editor: #1a1a2e;
+}
+
+[data-theme="light"] {
+  --bg-body: #f0f0f5;
+  --bg-toolbar: #ffffff;
+  --bg-panel: #ffffff;
+  --bg-surface: #e8e8ee;
+  --bg-input: #f0f0f5;
+  --bg-input-hover: #e0e0e8;
+  --border-main: #d0d0d8;
+  --border-input: #c5c5d0;
+  --border-preview: #bbb;
+  --text-primary: #2a2a3a;
+  --text-secondary: #666;
+  --text-muted: #888;
+  --text-heading: #444;
+  --text-success: #2d9d6e;
+  --accent: #e94560;
+  --accent-text: #fff;
+  --bg-editor: #fafafa;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
-  color: #e0e0e0;
-  background: #1a1a2e;
+  color: var(--text-primary);
+  background: var(--bg-body);
 }
 
 /* Toolbar */
@@ -14,15 +55,40 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;
-  background: #16213e;
-  border-bottom: 1px solid #0f3460;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-main);
   height: 48px;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .toolbar-title {
   font-size: 16px;
   font-weight: 600;
-  color: #e94560;
+  color: var(--accent);
+}
+
+.theme-toggle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border-input);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-input-hover);
 }
 
 .toolbar-controls {
@@ -33,13 +99,13 @@ html, body {
 
 .toolbar-controls label {
   font-size: 13px;
-  color: #aaa;
+  color: var(--text-secondary);
 }
 
 .toolbar-controls select {
-  background: #0f3460;
-  color: #e0e0e0;
-  border: 1px solid #1a1a5e;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-input);
   border-radius: 4px;
   padding: 4px 8px;
   font-size: 13px;
@@ -47,7 +113,7 @@ html, body {
 
 #save-status {
   font-size: 12px;
-  color: #4ecca3;
+  color: var(--text-success);
   min-width: 80px;
 }
 
@@ -63,20 +129,20 @@ html, body {
   min-width: 320px;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #0f3460;
+  border-right: 1px solid var(--border-main);
   overflow: hidden;
 }
 
 .panel-right {
   flex: 1;
-  background: #12121f;
+  background: var(--bg-surface);
   overflow: hidden;
   padding: 10px;
 }
 
 .panel-section {
   padding: 12px;
-  border-bottom: 1px solid #0f3460;
+  border-bottom: 1px solid var(--border-main);
   overflow-y: auto;
 }
 
@@ -93,6 +159,6 @@ html, body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #e94560;
+  color: var(--accent);
   margin-bottom: 10px;
 }
