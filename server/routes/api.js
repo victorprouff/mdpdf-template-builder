@@ -75,9 +75,13 @@ html, body { width: 794px; height: 1123px; overflow: hidden; }
   height: ${margins.top};
   padding: 0;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   flex-shrink: 0;
   overflow: hidden;
+  border: none;
+}
+.page-header, .page-header * {
+  border: none;
 }
 .page-header > * {
   width: 100%;
