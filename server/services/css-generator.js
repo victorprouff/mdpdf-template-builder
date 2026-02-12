@@ -3,6 +3,7 @@
  * Returns an object keyed by selector (h1-h6) with font-size, color, text-align.
  */
 function extractHeadingStyles(css) {
+  const vars = parseCssVars(css);
   const headings = {};
   for (let i = 1; i <= 6; i++) {
     headings[`h${i}`] = { fontSize: '', fontSizeUnit: 'pt', color: '', textAlign: '' };
@@ -18,19 +19,19 @@ function extractHeadingStyles(css) {
 
     const fontSize = extractProperty(body, 'font-size');
     if (fontSize) {
-      const parsed = parseSize(fontSize);
+      const parsed = parseSize(resolveVar(fontSize, vars));
       headings[selector].fontSize = parsed.value;
       headings[selector].fontSizeUnit = parsed.unit;
     }
 
     const color = extractProperty(body, 'color');
     if (color) {
-      headings[selector].color = color;
+      headings[selector].color = resolveVar(color, vars);
     }
 
     const textAlign = extractProperty(body, 'text-align');
     if (textAlign) {
-      headings[selector].textAlign = textAlign;
+      headings[selector].textAlign = resolveVar(textAlign, vars);
     }
   }
 
@@ -80,6 +81,26 @@ function updateHeadingProperty(css, selector, property, value) {
       lastMatch[1] + newBody + lastMatch[4] +
       css.substring(lastMatch.index + lastMatch[0].length);
   }
+}
+
+function parseCssVars(css) {
+  const vars = {};
+  const rootMatch = css.match(/:root\s*\{([^}]*)\}/);
+  if (rootMatch) {
+    const varRegex = /--([\w-]+)\s*:\s*([^;]+);/g;
+    let m;
+    while ((m = varRegex.exec(rootMatch[1])) !== null) {
+      vars[`--${m[1]}`] = m[2].trim();
+    }
+  }
+  return vars;
+}
+
+function resolveVar(value, vars) {
+  if (!value) return value;
+  const m = value.match(/^var\(\s*(--[\w-]+)\s*\)$/);
+  if (m && vars[m[1]]) return vars[m[1]];
+  return value;
 }
 
 function extractProperty(ruleBody, property) {

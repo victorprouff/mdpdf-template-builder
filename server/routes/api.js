@@ -73,7 +73,7 @@ html, body { width: 794px; height: 1123px; overflow: hidden; }
 }
 .page-header {
   height: ${margins.top};
-  padding: 0 ${margins.right} 0 ${margins.left};
+  padding: 0;
   display: flex;
   align-items: flex-end;
   flex-shrink: 0;
@@ -89,7 +89,7 @@ html, body { width: 794px; height: 1123px; overflow: hidden; }
 }
 .page-footer {
   height: ${margins.bottom};
-  padding: 0 ${margins.right} 0 ${margins.left};
+  padding: 0;
   display: flex;
   align-items: center;
   flex-shrink: 0;

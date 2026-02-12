@@ -129,21 +129,6 @@
     return value;
   }
 
-  /**
-   * Find which CSS variable a heading color uses, if any.
-   */
-  function findColorVar(css, heading) {
-    const ruleRegex = new RegExp(`(?:^|\\n)\\s*${heading}\\s*\\{([^}]*)\\}`, 'g');
-    let match;
-    while ((match = ruleRegex.exec(css)) !== null) {
-      const before = css.substring(Math.max(0, match.index - 5), match.index);
-      if (before.match(/,\s*$/)) continue;
-      const col = match[1].match(/color\s*:\s*(var\(\s*(--[\w-]+)\s*\))\s*;/);
-      if (col) return col[2]; // returns the variable name e.g. --primary-color
-      break;
-    }
-    return null;
-  }
 
   /**
    * Parse heading styles from CSS (simple regex extraction).
@@ -164,7 +149,8 @@
 
       const fs = body.match(/font-size\s*:\s*([^;]+);/);
       if (fs) {
-        const parsed = fs[1].trim().match(/^([\d.]+)\s*(pt|px|em|rem)$/);
+        const resolved = resolveVar(fs[1].trim(), vars);
+        const parsed = resolved.match(/^([\d.]+)\s*(pt|px|em|rem)$/);
         if (parsed) {
           headings[sel].fontSize = parsed[1];
           headings[sel].fontSizeUnit = parsed[2];
@@ -175,42 +161,50 @@
       if (col) headings[sel].color = resolveVar(col[1].trim(), vars);
 
       const ta = body.match(/text-align\s*:\s*([^;]+);/);
-      if (ta) headings[sel].textAlign = ta[1].trim();
+      if (ta) headings[sel].textAlign = resolveVar(ta[1].trim(), vars);
     }
 
     return headings;
   }
 
   /**
-   * Update a CSS variable value in :root.
+   * Set or create a CSS variable in :root.
+   * Updates if exists, adds if :root exists but var doesn't, creates :root if needed.
    */
-  function updateCssVar(css, varName, value) {
-    const regex = new RegExp(`(${varName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\s*:\\s*)([^;]*)(;)`);
+  function setOrCreateCssVar(css, varName, value) {
+    const escaped = varName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`(${escaped}\\s*:\\s*)([^;]*)(;)`);
     if (regex.test(css)) {
       return css.replace(regex, `$1${value}$3`);
     }
-    return css;
+    const rootMatch = css.match(/:root\s*\{([^}]*)\}/);
+    if (rootMatch) {
+      const rootEnd = css.indexOf('}', css.indexOf(':root'));
+      return css.slice(0, rootEnd) + `    ${varName}: ${value};\n` + css.slice(rootEnd);
+    }
+    return `:root {\n    ${varName}: ${value};\n}\n\n` + css;
   }
 
   /**
    * Apply a control change to the CSS text.
-   * If the heading color uses a var(), update the variable in :root instead.
+   * Always writes to --hN-property variables in :root.
    */
   function applyControlChange(css, heading, prop, value, state) {
     if (prop === 'fontSize' || prop === 'fontSizeUnit') {
       const s = state[heading];
       if (s.fontSize) {
-        css = updateCssProp(css, heading, 'font-size', `${s.fontSize}${s.fontSizeUnit}`);
+        const varName = `--${heading}-font-size`;
+        css = setOrCreateCssVar(css, varName, `${s.fontSize}${s.fontSizeUnit}`);
+        css = updateCssProp(css, heading, 'font-size', `var(${varName})`);
       }
     } else if (prop === 'color') {
-      const varName = findColorVar(css, heading);
-      if (varName) {
-        css = updateCssVar(css, varName, value);
-      } else {
-        css = updateCssProp(css, heading, 'color', value);
-      }
+      const varName = `--${heading}-color`;
+      css = setOrCreateCssVar(css, varName, value);
+      css = updateCssProp(css, heading, 'color', `var(${varName})`);
     } else if (prop === 'textAlign') {
-      css = updateCssProp(css, heading, 'text-align', value);
+      const varName = `--${heading}-text-align`;
+      css = setOrCreateCssVar(css, varName, value);
+      css = updateCssProp(css, heading, 'text-align', `var(${varName})`);
     }
     return css;
   }
