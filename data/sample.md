@@ -1,3 +1,7 @@
+---
+template: formation
+---
+
 # Titre principal du document
 
 ## Sous-titre de section

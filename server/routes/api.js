@@ -22,6 +22,16 @@ router.get('/templates/:name', (req, res) => {
   res.json(template);
 });
 
+// Create a new template
+router.post('/templates', express.json(), (req, res) => {
+  try {
+    templateService.createTemplate(req.body.name);
+    res.json({ ok: true, name: req.body.name });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // Save CSS for a template
 router.put('/templates/:name/css', express.json(), (req, res) => {
   try {
@@ -29,6 +39,26 @@ router.put('/templates/:name/css', express.json(), (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     res.status(404).json({ error: err.message });
+  }
+});
+
+// Save footer text for a template
+router.put('/templates/:name/footer', express.json(), (req, res) => {
+  try {
+    templateService.saveFooter(req.params.name, req.body.text);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(404).json({ error: err.message });
+  }
+});
+
+// Upload/replace logo for a template
+router.post('/templates/:name/logo', express.json({ limit: '5mb' }), (req, res) => {
+  try {
+    templateService.saveLogo(req.params.name, req.body.data);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 

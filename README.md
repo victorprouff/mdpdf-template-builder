@@ -12,6 +12,10 @@
 - **Hot reload** : les modifications externes du fichier template sont détectées via WebSocket
 - **Thème clair/sombre** : basculer via le bouton dans la toolbar
 
+## Bug à corriger
+- Les propriétés front matter s'affichent sur la view
+- Les listes à puce de niveau 2 sont au même niveau que le niveau 1 dans la view
+
 ## Structure du projet
 
 ```

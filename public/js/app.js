@@ -12,16 +12,15 @@
   // ── Init modules ──
   CssEditor.init();
   Controls.init();
+  HeaderFooter.init();
 
   // ── Load templates ──
-  const templates = await TemplateSelector.load();
+  let templates = await TemplateSelector.load();
   if (templates.length === 0) {
     saveStatus.textContent = 'Aucun template';
-    return;
+  } else {
+    await loadTemplate(templates[0]);
   }
-
-  // ── Load first template ──
-  await loadTemplate(templates[0]);
 
   // ── Template selector change ──
   TemplateSelector.setOnChange(async (name) => {
@@ -67,6 +66,60 @@
     }
   });
 
+  // ── New template button ──
+  document.getElementById('btn-new-template').addEventListener('click', async () => {
+    const name = prompt('Nom du nouveau template :');
+    if (!name || !name.trim()) return;
+    try {
+      const res = await fetch('/api/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim() })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'Erreur');
+        return;
+      }
+      templates = await TemplateSelector.refresh(name.trim());
+      await loadTemplate(name.trim());
+    } catch {
+      alert('Erreur lors de la création');
+    }
+  });
+
+  // ── Logo change ──
+  HeaderFooter.setOnLogoChange(async (dataUri) => {
+    try {
+      await fetch(`/api/templates/${encodeURIComponent(currentName)}/logo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: dataUri })
+      });
+      Preview.load(currentName);
+      saveStatus.textContent = 'Logo sauvegardé';
+      setTimeout(() => { saveStatus.textContent = ''; }, 2000);
+    } catch {
+      saveStatus.textContent = 'Erreur logo';
+    }
+  });
+
+  // ── Footer text change ──
+  HeaderFooter.setOnFooterChange(async (text) => {
+    try {
+      await fetch(`/api/templates/${encodeURIComponent(currentName)}/footer`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      Preview.load(currentName);
+      saveStatus.textContent = 'Footer sauvegardé';
+      setTimeout(() => { saveStatus.textContent = ''; }, 2000);
+    } catch {
+      saveStatus.textContent = 'Erreur footer';
+    }
+  });
+
   // ── Helper functions ──
 
   async function loadTemplate(name) {
@@ -76,8 +129,20 @@
     currentCss = tpl.css;
     CssEditor.setValue(tpl.css);
     Controls.setFromStyles(parseHeadingStyles(tpl.css));
+    HeaderFooter.setData({ logo: tpl.logo, footerText: extractFooterText(tpl.footer) });
     Preview.load(name);
     WsClient.send({ type: 'watch-template', name });
+  }
+
+  function extractFooterText(html) {
+    if (!html) return '';
+    return html
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(l => l.length > 0)
+      .join('\n');
   }
 
   function scheduleSave() {

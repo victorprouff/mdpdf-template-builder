@@ -26,9 +26,25 @@ const TemplateSelector = (() => {
     onChange = fn;
   }
 
+  async function refresh(selectName) {
+    const res = await fetch('/api/templates');
+    const templates = await res.json();
+    select.innerHTML = '';
+    templates.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      select.appendChild(opt);
+    });
+    if (selectName && templates.includes(selectName)) {
+      select.value = selectName;
+    }
+    return templates;
+  }
+
   select.addEventListener('change', () => {
     if (onChange) onChange(select.value);
   });
 
-  return { load, current, setOnChange };
+  return { load, current, setOnChange, refresh };
 })();
