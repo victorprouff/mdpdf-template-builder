@@ -1,22 +1,22 @@
 /* ── Theme variables ── */
 :root {
-  --bg-body: #1a1a2e;
-  --bg-toolbar: #16213e;
-  --bg-panel: #16213e;
-  --bg-surface: #12121f;
-  --bg-input: #0f3460;
-  --bg-input-hover: #1a1a5e;
-  --border-main: #0f3460;
-  --border-input: #1a1a5e;
-  --border-preview: #333;
+  --bg-body: #191919;
+  --bg-toolbar: #222222;
+  --bg-panel: #222222;
+  --bg-surface: #141414;
+  --bg-input: #2a2a2a;
+  --bg-input-hover: #363636;
+  --border-main: #333333;
+  --border-input: #3a3a3a;
+  --border-preview: #444;
   --text-primary: #e0e0e0;
   --text-secondary: #aaa;
-  --text-muted: #888;
+  --text-muted: #777;
   --text-heading: #ccc;
   --text-success: #4ecca3;
-  --accent: #e94560;
+  --accent: #dcc29a;
   --accent-text: #fff;
-  --bg-editor: #1a1a2e;
+  --bg-editor: #1e1e1e;
 }
 
 [data-theme="light"] {
@@ -58,12 +58,6 @@ html, body {
   background: var(--bg-toolbar);
   border-bottom: 1px solid var(--border-main);
   height: 48px;
-}
-
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .toolbar-title {
