@@ -12,7 +12,9 @@ const marked = new Marked({
 });
 
 function renderMarkdown(md) {
-  return marked.parse(md);
+  // Strip front matter (---...---)
+  const stripped = md.replace(/^---\n[\s\S]*?\n---\n?/, '');
+  return marked.parse(stripped);
 }
 
 module.exports = { renderMarkdown };

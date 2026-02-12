@@ -92,6 +92,8 @@ ${getHighlightCss()}
 </style>
 <style id="preview-layout">
 * { margin: 0; padding: 0; box-sizing: border-box; }
+ul, ol { padding-left: 1.5em; }
+ul ul, ul ol, ol ul, ol ol { padding-left: 1.5em; }
 html, body { width: 794px; height: 1123px; overflow: hidden; }
 .page {
   width: 794px;
