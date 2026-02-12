@@ -11,17 +11,16 @@
 - **Sauvegarde auto** : les modifications sont sauvegardées automatiquement sur le disque
 - **Hot reload** : les modifications externes du fichier template sont détectées via WebSocket
 - **Thème clair/sombre** : basculer via le bouton dans la toolbar
-
-## Bug à corriger
-- Les propriétés front matter s'affichent sur la view
-- Les listes à puce de niveau 2 sont au même niveau que le niveau 1 dans la view
+- **Création de template** : bouton "+" pour créer un nouveau template avec fichiers par défaut
+- **Gestion du logo** : upload/remplacement du logo via le panneau Header & Footer
+- **Édition du footer** : modification du texte du pied de page via une textarea
 
 ## Structure du projet
 
 ```
 server/
   index.js                  # Point d'entrée Express + HTTP server
-  routes/api.js             # API REST (list, load, save templates) + génération preview
+  routes/api.js             # API REST (CRUD templates) + génération preview
   services/template-service.js  # Lecture/écriture des templates (~/.mdpdf/templates/)
   services/css-generator.js     # Extraction des styles heading (côté serveur)
   services/markdown-service.js  # Rendu Markdown via marked + highlight.js
@@ -29,13 +28,14 @@ server/
 public/
   index.html                # Page principale
   css/app.css               # Layout + variables de thème
-  css/controls.css          # Styles du panneau de contrôles
+  css/controls.css          # Styles du panneau de contrôles + header/footer
   css/preview.css           # Styles de l'iframe preview
   js/app.js                 # Orchestrateur principal
   js/controls.js            # Panneau de contrôles (h1-h6)
   js/css-editor.js          # Wrapper CodeMirror
+  js/header-footer.js       # Upload logo + édition footer
   js/preview.js             # Gestion iframe + scaling
-  js/template-selector.js   # Sélection de template
+  js/template-selector.js   # Sélection + création de template
   js/websocket-client.js    # Client WebSocket
 data/
   sample.md                 # Markdown d'exemple pour l'aperçu
@@ -95,7 +95,10 @@ Ouvrir http://localhost:3000.
 |---|---|---|
 | `GET` | `/api/templates` | Liste des templates disponibles |
 | `GET` | `/api/templates/:name` | Charge un template (CSS, header, footer, logo) |
+| `POST` | `/api/templates` | Crée un nouveau template |
 | `PUT` | `/api/templates/:name/css` | Sauvegarde le CSS d'un template |
+| `PUT` | `/api/templates/:name/footer` | Sauvegarde le texte du footer |
+| `POST` | `/api/templates/:name/logo` | Upload/remplacement du logo (base64, max 5 Mo) |
 | `GET` | `/api/preview/:name` | HTML complet de l'aperçu A4 |
 
 ## WebSocket
