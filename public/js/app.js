@@ -9,6 +9,13 @@
   let saveTimer = null;
   const saveStatus = document.getElementById('save-status');
 
+  // ── Init accordions ──
+  document.querySelectorAll('[data-accordion-toggle]').forEach(header => {
+    header.addEventListener('click', () => {
+      header.closest('[data-accordion]').classList.toggle('open');
+    });
+  });
+
   // ── Init modules ──
   CssEditor.init();
   Controls.init();

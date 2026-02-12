@@ -2,13 +2,14 @@
  * Header & Footer controls: logo upload + footer text editing.
  */
 const HeaderFooter = (() => {
-  const container = document.getElementById('header-footer-controls');
+  const headerContainer = document.getElementById('header-controls');
+  const footerContainer = document.getElementById('footer-controls');
   let onLogoChange = null;
   let onFooterChange = null;
   let debounceTimer = null;
 
   function init() {
-    // Logo section
+    // Logo section → header container
     const logoSection = document.createElement('div');
     logoSection.className = 'logo-section';
 
@@ -54,8 +55,9 @@ const HeaderFooter = (() => {
 
     logoRow.append(logoThumb, logoPlaceholder, logoBtn, fileInput);
     logoSection.append(logoLabel, logoRow);
+    headerContainer.append(logoSection);
 
-    // Footer section
+    // Footer section → footer container
     const footerSection = document.createElement('div');
     footerSection.className = 'footer-section';
 
@@ -77,8 +79,7 @@ const HeaderFooter = (() => {
     });
 
     footerSection.append(footerLabel, textarea);
-
-    container.append(logoSection, footerSection);
+    footerContainer.append(footerSection);
   }
 
   function setLogoPreview(dataUri) {

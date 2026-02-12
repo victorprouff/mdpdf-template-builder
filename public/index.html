@@ -34,13 +34,32 @@
   <main class="layout">
     <!-- Left panel: controls + CSS editor -->
     <aside class="panel-left">
-      <div class="panel-section" id="controls-section">
-        <h2 class="panel-heading">Titres</h2>
-        <div id="heading-controls"></div>
+      <div class="panel-section accordion open" data-accordion>
+        <h2 class="panel-heading accordion-toggle" data-accordion-toggle>
+          Header
+          <span class="accordion-chevron">&#9654;</span>
+        </h2>
+        <div class="accordion-body">
+          <div id="header-controls"></div>
+        </div>
       </div>
-      <div class="panel-section" id="header-footer-section">
-        <h2 class="panel-heading">Header & Footer</h2>
-        <div id="header-footer-controls"></div>
+      <div class="panel-section accordion open" data-accordion>
+        <h2 class="panel-heading accordion-toggle" data-accordion-toggle>
+          Footer
+          <span class="accordion-chevron">&#9654;</span>
+        </h2>
+        <div class="accordion-body">
+          <div id="footer-controls"></div>
+        </div>
+      </div>
+      <div class="panel-section accordion open" data-accordion>
+        <h2 class="panel-heading accordion-toggle" data-accordion-toggle>
+          Titres
+          <span class="accordion-chevron">&#9654;</span>
+        </h2>
+        <div class="accordion-body">
+          <div id="heading-controls"></div>
+        </div>
       </div>
       <div class="panel-section panel-section--editor">
         <h2 class="panel-heading">CSS</h2>
