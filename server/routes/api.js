@@ -72,8 +72,15 @@ html, body { width: 794px; height: 1123px; overflow: hidden; }
   flex-direction: column;
 }
 .page-header {
-  padding: ${margins.top} ${margins.right} 0 ${margins.left};
+  height: ${margins.top};
+  padding: 0 ${margins.right} 0 ${margins.left};
+  display: flex;
+  align-items: flex-end;
   flex-shrink: 0;
+  overflow: hidden;
+}
+.page-header > * {
+  width: 100%;
 }
 .page-body {
   flex: 1;
@@ -81,8 +88,15 @@ html, body { width: 794px; height: 1123px; overflow: hidden; }
   overflow: hidden;
 }
 .page-footer {
-  padding: 0 ${margins.right} ${margins.bottom} ${margins.left};
+  height: ${margins.bottom};
+  padding: 0 ${margins.right} 0 ${margins.left};
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
+  overflow: hidden;
+}
+.page-footer > * {
+  width: 100%;
 }
 </style>
 <style id="template-css">

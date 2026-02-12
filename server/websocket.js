@@ -4,6 +4,8 @@ const templateService = require('./services/template-service');
 
 let wss;
 const watchers = new Map(); // templateName -> chokidar watcher
+// Track self-initiated writes to avoid feedback loops
+let selfWriteUntil = 0;
 
 function init(server) {
   wss = new WebSocketServer({ server });
@@ -21,6 +23,7 @@ function init(server) {
       }
 
       if (msg.type === 'update-css') {
+        selfWriteUntil = Date.now() + 1000;
         templateService.saveCss(msg.name, msg.css);
         // Notify other clients
         broadcast({ type: 'css-updated', name: msg.name, css: msg.css }, ws);
@@ -58,6 +61,8 @@ function watchTemplate(name) {
   });
 
   watcher.on('change', (filePath) => {
+    // Ignore changes triggered by our own writes
+    if (Date.now() < selfWriteUntil) return;
     broadcast({ type: 'file-changed', name, file: filePath });
   });
 
