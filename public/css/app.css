@@ -69,12 +69,9 @@ html, body {
 
 .panel-right {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: #12121f;
   overflow: hidden;
-  padding: 20px;
+  padding: 10px;
 }
 
 .panel-section {

@@ -32,12 +32,16 @@ const Preview = (() => {
   }
 
   function scaleToFit() {
-    const cw = container.clientWidth - 40;
-    const ch = container.clientHeight - 40;
+    const cw = container.clientWidth;
+    const ch = container.clientHeight;
     const pageW = 794;
     const pageH = 1123;
     const scale = Math.min(cw / pageW, ch / pageH, 1);
+    const scaledW = pageW * scale;
+    const scaledH = pageH * scale;
     iframe.style.transform = `scale(${scale})`;
+    iframe.style.left = `${(cw - scaledW) / 2}px`;
+    iframe.style.top = `${(ch - scaledH) / 2}px`;
   }
 
   window.addEventListener('resize', scaleToFit);
