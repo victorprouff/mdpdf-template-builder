@@ -6,14 +6,17 @@
 
 - **Aperçu live A4** : rendu dans une iframe 794x1123px avec mise à l'échelle automatique
 - **Éditeur CSS** : éditeur CodeMirror avec coloration syntaxique
+- **Panneau accordéon** : sections Header, Footer et Titres collapsibles dans le sidebar
 - **Contrôles visuels** : panneau pour modifier font-size, couleur et alignement des titres (h1-h6)
 - **Variables CSS** : les propriétés modifiables sont variabilisées dans `:root` (convention `--hN-property`)
 - **Sauvegarde auto** : les modifications sont sauvegardées automatiquement sur le disque
 - **Hot reload** : les modifications externes du fichier template sont détectées via WebSocket
 - **Thème clair/sombre** : basculer via le bouton dans la toolbar
 - **Création de template** : bouton "+" pour créer un nouveau template avec fichiers par défaut
-- **Gestion du logo** : upload/remplacement du logo via le panneau Header & Footer
-- **Édition du footer** : modification du texte du pied de page via une textarea
+- **Gestion du logo** : upload/remplacement du logo via la section Header
+- **Édition du footer** : modification du texte du pied de page via la section Footer
+
+
 
 ## Structure du projet
 
@@ -45,12 +48,12 @@ data/
 
 Les templates sont lus depuis `~/.mdpdf/templates/`. Chaque template est un dossier contenant :
 
-| Fichier | Description |
-|---|---|
+| Fichier        | Description                                                          |
+| -------------- | -------------------------------------------------------------------- |
 | `template.css` | Feuille de style du document (avec `@page`, `:root`, headings, etc.) |
-| `header.html` | HTML du header (supporte `{{LOGO}}` et `{{DATE}}`) |
-| `footer.html` | HTML du footer |
-| `logo.png` | Logo (optionnel, injecté en base64) |
+| `header.html`  | HTML du header (supporte `{{LOGO}}` et `{{DATE}}`)                   |
+| `footer.html`  | HTML du footer                                                       |
+| `logo.png`     | Logo (optionnel, injecté en base64)                                  |
 
 ### Convention des variables CSS
 
@@ -91,15 +94,15 @@ Ouvrir http://localhost:3000.
 
 ## API
 
-| Méthode | Route | Description |
-|---|---|---|
-| `GET` | `/api/templates` | Liste des templates disponibles |
-| `GET` | `/api/templates/:name` | Charge un template (CSS, header, footer, logo) |
-| `POST` | `/api/templates` | Crée un nouveau template |
-| `PUT` | `/api/templates/:name/css` | Sauvegarde le CSS d'un template |
-| `PUT` | `/api/templates/:name/footer` | Sauvegarde le texte du footer |
-| `POST` | `/api/templates/:name/logo` | Upload/remplacement du logo (base64, max 5 Mo) |
-| `GET` | `/api/preview/:name` | HTML complet de l'aperçu A4 |
+| Méthode | Route                         | Description                                    |
+| ------- | ----------------------------- | ---------------------------------------------- |
+| `GET`   | `/api/templates`              | Liste des templates disponibles                |
+| `GET`   | `/api/templates/:name`        | Charge un template (CSS, header, footer, logo) |
+| `POST`  | `/api/templates`              | Crée un nouveau template                       |
+| `PUT`   | `/api/templates/:name/css`    | Sauvegarde le CSS d'un template                |
+| `PUT`   | `/api/templates/:name/footer` | Sauvegarde le texte du footer                  |
+| `POST`  | `/api/templates/:name/logo`   | Upload/remplacement du logo (base64, max 5 Mo) |
+| `GET`   | `/api/preview/:name`          | HTML complet de l'aperçu A4                    |
 
 ## WebSocket
 

@@ -31,7 +31,7 @@ Chaque module est un IIFE qui expose un objet global :
 - `public/js/app.js` — Orchestrateur principal, wire tous les modules ensemble
 - `public/js/controls.js` — `Controls` : panneau h1-h6 (font-size, color, text-align)
 - `public/js/css-editor.js` — `CssEditor` : wrapper CodeMirror (mode CSS, thème material-darker)
-- `public/js/header-footer.js` — `HeaderFooter` : upload logo + textarea footer
+- `public/js/header-footer.js` — `HeaderFooter` : upload logo (`#header-controls`) + textarea footer (`#footer-controls`)
 - `public/js/preview.js` — `Preview` : gestion iframe, scaling A4, hot CSS swap
 - `public/js/template-selector.js` — `TemplateSelector` : dropdown + refresh
 - `public/js/websocket-client.js` — `WsClient` : client WebSocket auto-reconnect
@@ -39,7 +39,7 @@ Chaque module est un IIFE qui expose un objet global :
 ### CSS
 
 - `public/css/app.css` — Layout + variables de thème (`:root` dark, `[data-theme="light"]`)
-- `public/css/controls.css` — Styles des contrôles, boutons, header-footer section, CodeMirror overrides
+- `public/css/controls.css` — Styles des contrôles, boutons, accordéons, CodeMirror overrides
 - `public/css/preview.css` — Iframe preview (position absolute + transform scale)
 
 ## Templates
@@ -57,6 +57,7 @@ Stockés dans `~/.mdpdf/templates/<nom>/`. Fichiers :
 - **Pas de framework** côté client, pas de bundler, pas de TypeScript
 - **Modules IIFE** : chaque fichier JS expose un objet global (ex: `const Controls = (() => { ... })()`)
 - Les scripts sont chargés dans l'ordre des dépendances dans `index.html`
+- **Accordéons** : le sidebar a 3 sections collapsibles (Header, Footer, Titres) avec `data-accordion` + classe `open`, initialisés dans `app.js`
 - **Sauvegarde auto** : debounce 500ms pour CSS, footer, logo
 - **Preview** : l'iframe fait 794x1123px (A4 96dpi), scalée avec `transform: scale()`
 
