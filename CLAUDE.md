@@ -79,5 +79,6 @@ Stockés dans `~/.mdpdf/templates/<nom>/`. Fichiers :
 - Le front matter YAML est strippé avant le rendu Markdown
 - La preview supprime les règles `@page` et `position: running()` (CSS Paged Media non supporté par le navigateur)
 - Header/footer de la preview utilisent des hauteurs basées sur les marges `@page`
+- **Styles inline obligatoires dans `header.html`/`footer.html`** : Puppeteer rend les `headerTemplate`/`footerTemplate` dans un contexte CSS isolé — le `template.css` n'est pas accessible. Ne pas migrer vers des classes CSS, sinon le PDF perd tout style header/footer.
 - Les paddings header/footer sont stockés en doublon : variables CSS dans `:root` (synchro éditeur) + inline dans `header.html`/`footer.html` (utilisé par mdpdf)
 - Les écritures API doivent appeler `markSelfWrite()` (websocket.js) pour éviter un rechargement intempestif par le file watcher
