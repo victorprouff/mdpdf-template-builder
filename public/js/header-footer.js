@@ -1,12 +1,63 @@
 /**
- * Header & Footer controls: logo upload + footer text editing.
+ * Header & Footer controls: logo upload, footer text editing, and padding controls.
  */
 const HeaderFooter = (() => {
   const headerContainer = document.getElementById('header-controls');
   const footerContainer = document.getElementById('footer-controls');
   let onLogoChange = null;
   let onFooterChange = null;
+  let onPaddingChange = null;
   let debounceTimer = null;
+  const SIDES = ['top', 'right', 'bottom', 'left'];
+  const LABELS = { top: 'Haut', right: 'Droite', bottom: 'Bas', left: 'Gauche' };
+
+  function createPaddingGrid(area, container) {
+    const label = document.createElement('div');
+    label.className = 'field-label';
+    label.textContent = 'Padding';
+    label.style.marginTop = '10px';
+
+    const grid = document.createElement('div');
+    grid.className = 'margin-grid';
+
+    SIDES.forEach(side => {
+      const group = document.createElement('div');
+      group.className = 'margin-field';
+
+      const lbl = document.createElement('label');
+      lbl.textContent = LABELS[side];
+
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = '0';
+      input.max = '200';
+      input.dataset.area = area;
+      input.dataset.side = side;
+      input.addEventListener('input', () => {
+        firePaddingChange(area);
+      });
+
+      const unitLabel = document.createElement('span');
+      unitLabel.className = 'margin-unit-label';
+      unitLabel.textContent = 'px';
+
+      group.append(lbl, input, unitLabel);
+      grid.appendChild(group);
+    });
+
+    container.append(label, grid);
+  }
+
+  function firePaddingChange(area) {
+    if (!onPaddingChange) return;
+    const container = area === 'header' ? headerContainer : footerContainer;
+    const paddings = {};
+    SIDES.forEach(side => {
+      const input = container.querySelector(`[data-area="${area}"][data-side="${side}"]`);
+      paddings[side] = input && input.value ? `${input.value}px` : '';
+    });
+    onPaddingChange({ area, paddings });
+  }
 
   function init() {
     // Logo section → header container
@@ -57,6 +108,9 @@ const HeaderFooter = (() => {
     logoSection.append(logoLabel, logoRow);
     headerContainer.append(logoSection);
 
+    // Padding controls for header
+    createPaddingGrid('header', headerContainer);
+
     // Footer section → footer container
     const footerSection = document.createElement('div');
     footerSection.className = 'footer-section';
@@ -80,6 +134,9 @@ const HeaderFooter = (() => {
 
     footerSection.append(footerLabel, textarea);
     footerContainer.append(footerSection);
+
+    // Padding controls for footer
+    createPaddingGrid('footer', footerContainer);
   }
 
   function setLogoPreview(dataUri) {
@@ -101,8 +158,23 @@ const HeaderFooter = (() => {
     if (textarea) textarea.value = footerText || '';
   }
 
+  function setPaddings({ header, footer }) {
+    ['header', 'footer'].forEach(area => {
+      const data = area === 'header' ? header : footer;
+      const cont = area === 'header' ? headerContainer : footerContainer;
+      SIDES.forEach(side => {
+        const input = cont.querySelector(`[data-area="${area}"][data-side="${side}"]`);
+        if (input) {
+          const val = data && data[side] ? data[side].replace(/px$/, '') : '';
+          input.value = val;
+        }
+      });
+    });
+  }
+
   function setOnLogoChange(fn) { onLogoChange = fn; }
   function setOnFooterChange(fn) { onFooterChange = fn; }
+  function setOnPaddingChange(fn) { onPaddingChange = fn; }
 
-  return { init, setData, setOnLogoChange, setOnFooterChange };
+  return { init, setData, setPaddings, setOnLogoChange, setOnFooterChange, setOnPaddingChange };
 })();

@@ -118,6 +118,46 @@
   border-color: var(--accent);
 }
 
+/* Margin controls */
+.margin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.margin-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.margin-field label {
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 42px;
+  flex-shrink: 0;
+}
+
+.margin-field input[type="number"] {
+  width: 60px;
+  padding: 3px 4px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: 3px;
+  color: var(--text-primary);
+  font-size: 12px;
+  text-align: center;
+}
+
+.margin-field input[type="number"]::-webkit-inner-spin-button {
+  opacity: 1;
+}
+
+.margin-unit-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 /* New template button */
 .btn-new-template {
   width: 30px;

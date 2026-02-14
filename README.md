@@ -6,16 +6,17 @@
 
 - **Aperçu live A4** : rendu dans une iframe 794x1123px avec mise à l'échelle automatique
 - **Éditeur CSS** : éditeur CodeMirror avec coloration syntaxique
-- **Panneau accordéon** : sections Header, Footer et Titres collapsibles dans le sidebar
+- **Panneau accordéon** : sections Header, Footer, Marges et Titres collapsibles dans le sidebar
 - **Contrôles visuels** : panneau pour modifier font-size, couleur et alignement des titres (h1-h6)
-- **Variables CSS** : les propriétés modifiables sont variabilisées dans `:root` (convention `--hN-property`)
+- **Marges de page** : contrôles pour les marges `@page` (top, right, bottom, left)
+- **Padding header/footer** : contrôles de padding internes pour le header et le footer, synchronisés avec le CSS et les fichiers HTML
+- **Variables CSS** : les propriétés modifiables sont variabilisées dans `:root` (convention `--hN-property`, `--header-padding-*`, `--footer-padding-*`)
 - **Sauvegarde auto** : les modifications sont sauvegardées automatiquement sur le disque
 - **Hot reload** : les modifications externes du fichier template sont détectées via WebSocket
 - **Thème clair/sombre** : basculer via le bouton dans la toolbar
 - **Création de template** : bouton "+" pour créer un nouveau template avec fichiers par défaut
 - **Gestion du logo** : upload/remplacement du logo via la section Header
 - **Édition du footer** : modification du texte du pied de page via la section Footer
-
 
 
 ## Structure du projet
@@ -36,7 +37,8 @@ public/
   js/app.js                 # Orchestrateur principal
   js/controls.js            # Panneau de contrôles (h1-h6)
   js/css-editor.js          # Wrapper CodeMirror
-  js/header-footer.js       # Upload logo + édition footer
+  js/header-footer.js       # Upload logo + édition footer + padding header/footer
+  js/margins.js             # Contrôles des marges @page
   js/preview.js             # Gestion iframe + scaling
   js/template-selector.js   # Sélection + création de template
   js/websocket-client.js    # Client WebSocket
@@ -66,6 +68,11 @@ Les propriétés modifiables via le panneau de contrôles sont déclarées dans 
     --h1-text-align: center;
     --h2-font-size: 12pt;
     --h2-color: #dcc29a;
+    --header-padding-top: 10px;
+    --header-padding-right: 20px;
+    --header-padding-bottom: 5px;
+    --header-padding-left: 20px;
+    --footer-padding-top: 5px;
     /* ... */
 }
 
@@ -75,6 +82,8 @@ h1 {
     text-align: var(--h1-text-align);
 }
 ```
+
+> **Note** : les variables `--header-padding-*` et `--footer-padding-*` sont aussi appliquées en inline dans `header.html` et `footer.html` pour être prises en compte par mdpdf lors de la génération PDF.
 
 ## Installation
 
@@ -101,6 +110,7 @@ Ouvrir http://localhost:3000.
 | `POST`  | `/api/templates`              | Crée un nouveau template                       |
 | `PUT`   | `/api/templates/:name/css`    | Sauvegarde le CSS d'un template                |
 | `PUT`   | `/api/templates/:name/footer` | Sauvegarde le texte du footer                  |
+| `PUT`   | `/api/templates/:name/padding`| Sauvegarde le padding header ou footer          |
 | `POST`  | `/api/templates/:name/logo`   | Upload/remplacement du logo (base64, max 5 Mo) |
 | `GET`   | `/api/preview/:name`          | HTML complet de l'aperçu A4                    |
 

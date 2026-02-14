@@ -20,6 +20,7 @@
   CssEditor.init();
   Controls.init();
   HeaderFooter.init();
+  Margins.init();
 
   // ── Load templates ──
   let templates = await TemplateSelector.load();
@@ -39,6 +40,8 @@
     currentCss = css;
     Preview.updateCss(css);
     Controls.setFromStyles(parseHeadingStyles(css));
+    Margins.setFromCss(css);
+    HeaderFooter.setPaddings(parseAreaPaddings(css));
     scheduleSave();
   });
 
@@ -49,6 +52,32 @@
     CssEditor.setValue(newCss);
     Preview.updateCss(newCss);
     scheduleSave();
+  });
+
+  // ── Margins change -> update CSS + preview + editor ──
+  Margins.setOnChange((margins) => {
+    const newCss = applyMarginChange(currentCss, margins);
+    currentCss = newCss;
+    CssEditor.setValue(newCss);
+    Preview.updateCss(newCss);
+    scheduleSave();
+  });
+
+  // ── Header/Footer padding change -> update CSS variables + editor + HTML + reload preview ──
+  HeaderFooter.setOnPaddingChange(async ({ area, paddings }) => {
+    let css = currentCss;
+    const SIDES = ['top', 'right', 'bottom', 'left'];
+    SIDES.forEach(side => {
+      const varName = `--${area}-padding-${side}`;
+      const value = paddings[side] || '0px';
+      css = setOrCreateCssVar(css, varName, value);
+    });
+    currentCss = css;
+    CssEditor.setValue(css);
+    // Save CSS + padding HTML, then reload preview
+    await saveCss();
+    await savePadding(area, paddings);
+    Preview.load(currentName);
   });
 
   // ── WebSocket: external file changes ──
@@ -64,6 +93,8 @@
       CssEditor.setValue(msg.css);
       Preview.updateCss(msg.css);
       Controls.setFromStyles(parseHeadingStyles(msg.css));
+      Margins.setFromCss(msg.css);
+      HeaderFooter.setPaddings(parseAreaPaddings(msg.css));
     }
   });
 
@@ -136,7 +167,9 @@
     currentCss = tpl.css;
     CssEditor.setValue(tpl.css);
     Controls.setFromStyles(parseHeadingStyles(tpl.css));
+    Margins.setFromCss(tpl.css);
     HeaderFooter.setData({ logo: tpl.logo, footerText: extractFooterText(tpl.footer) });
+    HeaderFooter.setPaddings(parseAreaPaddings(tpl.css));
     Preview.load(name);
     WsClient.send({ type: 'watch-template', name });
   }
@@ -158,6 +191,18 @@
     saveTimer = setTimeout(() => saveCss(), 500);
   }
 
+  async function savePadding(area, paddings) {
+    try {
+      await fetch(`/api/templates/${encodeURIComponent(currentName)}/padding`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ area, paddings })
+      });
+    } catch {
+      saveStatus.textContent = 'Erreur padding';
+    }
+  }
+
   async function saveCss() {
     try {
       await fetch(`/api/templates/${encodeURIComponent(currentName)}/css`, {
@@ -170,6 +215,21 @@
     } catch {
       saveStatus.textContent = 'Erreur sauvegarde';
     }
+  }
+
+  /**
+   * Parse header/footer padding CSS variables from :root.
+   */
+  function parseAreaPaddings(css) {
+    const vars = parseCssVars(css);
+    const result = { header: {}, footer: {} };
+    ['header', 'footer'].forEach(area => {
+      ['top', 'right', 'bottom', 'left'].forEach(side => {
+        const val = vars[`--${area}-padding-${side}`];
+        result[area][side] = val || '';
+      });
+    });
+    return result;
   }
 
   /**
@@ -237,6 +297,40 @@
     }
 
     return headings;
+  }
+
+  /**
+   * Apply margin changes to the @page rule in CSS.
+   */
+  function applyMarginChange(css, margins) {
+    const sides = ['top', 'right', 'bottom', 'left'];
+    const hasValues = sides.some(s => margins[s]);
+    if (!hasValues) return css;
+
+    // Build individual margin declarations
+    const decls = sides
+      .filter(s => margins[s])
+      .map(s => `    margin-${s}: ${margins[s]};`)
+      .join('\n');
+
+    const pageMatch = css.match(/@page\s*\{([^}]*)\}/);
+    if (pageMatch) {
+      let body = pageMatch[1];
+      // Remove existing margin declarations (shorthand and individual)
+      body = body.replace(/\s*margin\s*:[^;]*;/g, '');
+      sides.forEach(s => {
+        body = body.replace(new RegExp(`\\s*margin-${s}\\s*:[^;]*;`, 'g'), '');
+      });
+      // Clean up extra blank lines
+      body = body.replace(/\n{3,}/g, '\n\n');
+      // Add new margin declarations
+      const trimmed = body.trimEnd();
+      const newBody = trimmed + '\n' + decls + '\n';
+      return css.replace(/@page\s*\{[^}]*\}/, `@page {${newBody}}`);
+    }
+
+    // No @page block exists, create one
+    return `@page {\n${decls}\n}\n\n` + css;
   }
 
   /**

@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const router = express.Router();
 const templateService = require('../services/template-service');
+const { markSelfWrite } = require('../websocket');
 const { renderMarkdown } = require('../services/markdown-service');
 
 const sampleMdPath = path.join(__dirname, '..', '..', 'data', 'sample.md');
@@ -35,6 +36,7 @@ router.post('/templates', express.json(), (req, res) => {
 // Save CSS for a template
 router.put('/templates/:name/css', express.json(), (req, res) => {
   try {
+    markSelfWrite();
     templateService.saveCss(req.params.name, req.body.css);
     res.json({ ok: true });
   } catch (err) {
@@ -45,6 +47,7 @@ router.put('/templates/:name/css', express.json(), (req, res) => {
 // Save footer text for a template
 router.put('/templates/:name/footer', express.json(), (req, res) => {
   try {
+    markSelfWrite();
     templateService.saveFooter(req.params.name, req.body.text);
     res.json({ ok: true });
   } catch (err) {
@@ -52,9 +55,21 @@ router.put('/templates/:name/footer', express.json(), (req, res) => {
   }
 });
 
+// Save padding for header or footer
+router.put('/templates/:name/padding', express.json(), (req, res) => {
+  try {
+    markSelfWrite();
+    templateService.savePadding(req.params.name, req.body.area, req.body.paddings);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // Upload/replace logo for a template
 router.post('/templates/:name/logo', express.json({ limit: '5mb' }), (req, res) => {
   try {
+    markSelfWrite();
     templateService.saveLogo(req.params.name, req.body.data);
     res.json({ ok: true });
   } catch (err) {

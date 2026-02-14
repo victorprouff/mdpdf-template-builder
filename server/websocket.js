@@ -79,4 +79,8 @@ function broadcast(data, exclude) {
   });
 }
 
-module.exports = { init };
+function markSelfWrite() {
+  selfWriteUntil = Date.now() + 1000;
+}
+
+module.exports = { init, markSelfWrite };

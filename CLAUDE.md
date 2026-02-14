@@ -31,7 +31,8 @@ Chaque module est un IIFE qui expose un objet global :
 - `public/js/app.js` — Orchestrateur principal, wire tous les modules ensemble
 - `public/js/controls.js` — `Controls` : panneau h1-h6 (font-size, color, text-align)
 - `public/js/css-editor.js` — `CssEditor` : wrapper CodeMirror (mode CSS, thème material-darker)
-- `public/js/header-footer.js` — `HeaderFooter` : upload logo (`#header-controls`) + textarea footer (`#footer-controls`)
+- `public/js/header-footer.js` — `HeaderFooter` : upload logo, textarea footer, padding controls (header + footer)
+- `public/js/margins.js` — `Margins` : contrôles marges `@page` (top, right, bottom, left)
 - `public/js/preview.js` — `Preview` : gestion iframe, scaling A4, hot CSS swap
 - `public/js/template-selector.js` — `TemplateSelector` : dropdown + refresh
 - `public/js/websocket-client.js` — `WsClient` : client WebSocket auto-reconnect
@@ -52,12 +53,12 @@ Stockés dans `~/.mdpdf/templates/<nom>/`. Fichiers :
 
 ## Conventions
 
-- **Variables CSS des templates** : `--h1-font-size`, `--h1-color`, `--h1-text-align`, etc.
+- **Variables CSS des templates** : `--h1-font-size`, `--h1-color`, `--h1-text-align`, `--header-padding-top`, `--footer-padding-*`, etc.
 - **Variables CSS du thème UI** : `--bg-body`, `--bg-panel`, `--text-primary`, `--accent`, etc.
 - **Pas de framework** côté client, pas de bundler, pas de TypeScript
 - **Modules IIFE** : chaque fichier JS expose un objet global (ex: `const Controls = (() => { ... })()`)
 - Les scripts sont chargés dans l'ordre des dépendances dans `index.html`
-- **Accordéons** : le sidebar a 3 sections collapsibles (Header, Footer, Titres) avec `data-accordion` + classe `open`, initialisés dans `app.js`
+- **Accordéons** : le sidebar a 4 sections collapsibles (Header, Footer, Marges, Titres) avec `data-accordion` + classe `open`, initialisés dans `app.js`
 - **Sauvegarde auto** : debounce 500ms pour CSS, footer, logo
 - **Preview** : l'iframe fait 794x1123px (A4 96dpi), scalée avec `transform: scale()`
 
@@ -68,6 +69,7 @@ Stockés dans `~/.mdpdf/templates/<nom>/`. Fichiers :
 - `POST /api/templates` — Crée un nouveau template `{ name }`
 - `PUT /api/templates/:name/css` — Sauvegarde CSS `{ css }`
 - `PUT /api/templates/:name/footer` — Sauvegarde footer `{ text }` (texte brut, converti en HTML)
+- `PUT /api/templates/:name/padding` — Sauvegarde padding `{ area: 'header'|'footer', paddings: { top, right, bottom, left } }`
 - `POST /api/templates/:name/logo` — Upload logo `{ data }` (base64 data URI, limit 5MB)
 - `GET /api/preview/:name` — HTML complet pour l'iframe
 
@@ -77,3 +79,5 @@ Stockés dans `~/.mdpdf/templates/<nom>/`. Fichiers :
 - Le front matter YAML est strippé avant le rendu Markdown
 - La preview supprime les règles `@page` et `position: running()` (CSS Paged Media non supporté par le navigateur)
 - Header/footer de la preview utilisent des hauteurs basées sur les marges `@page`
+- Les paddings header/footer sont stockés en doublon : variables CSS dans `:root` (synchro éditeur) + inline dans `header.html`/`footer.html` (utilisé par mdpdf)
+- Les écritures API doivent appeler `markSelfWrite()` (websocket.js) pour éviter un rechargement intempestif par le file watcher

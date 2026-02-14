@@ -119,6 +119,29 @@ function saveFooter(name, text) {
   fs.writeFileSync(path.join(dir, 'footer.html'), html, 'utf-8');
 }
 
+function savePadding(name, area, paddings) {
+  const dir = getTemplatePath(name);
+  if (!fs.existsSync(dir)) {
+    throw new Error(`Template "${name}" not found`);
+  }
+  const file = area === 'header' ? 'header.html' : 'footer.html';
+  const filePath = path.join(dir, file);
+  if (!fs.existsSync(filePath)) return;
+
+  let html = fs.readFileSync(filePath, 'utf-8');
+  const paddingValue = `${paddings.top || '0'} ${paddings.right || '0'} ${paddings.bottom || '0'} ${paddings.left || '0'}`;
+
+  // Replace existing padding in inline style
+  if (/padding\s*:[^;"]+/.test(html)) {
+    html = html.replace(/padding\s*:[^;"]+/, `padding: ${paddingValue}`);
+  } else {
+    // Add padding to the first style attribute
+    html = html.replace(/style="/, `style="padding: ${paddingValue}; `);
+  }
+
+  fs.writeFileSync(filePath, html, 'utf-8');
+}
+
 function saveLogo(name, dataUri) {
   const dir = getTemplatePath(name);
   if (!fs.existsSync(dir)) {
@@ -132,4 +155,4 @@ function saveLogo(name, dataUri) {
   fs.writeFileSync(path.join(dir, 'logo.png'), buffer);
 }
 
-module.exports = { listTemplates, loadTemplate, saveCss, getTemplatePath, TEMPLATES_DIR, createTemplate, saveFooter, saveLogo };
+module.exports = { listTemplates, loadTemplate, saveCss, getTemplatePath, TEMPLATES_DIR, createTemplate, saveFooter, saveLogo, savePadding };
