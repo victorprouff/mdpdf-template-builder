@@ -1,6 +1,8 @@
 # mdpdf-template-builder
 
-Éditeur visuel pour les templates mdpdf. Permet de modifier le CSS d'un template et de visualiser le rendu en temps réel dans un aperçu A4.
+Éditeur visuel pour les templates [mdpdf](https://github.com/victorprouff/mdpdf). Permet de modifier le CSS d'un template et de visualiser le rendu en temps réel dans un aperçu A4.
+
+![Exemple de template](./images/example.png)
 
 ## Fonctionnalités
 
@@ -17,6 +19,15 @@
 - **Création de template** : bouton "+" pour créer un nouveau template avec fichiers par défaut
 - **Gestion du logo** : upload/remplacement du logo via la section Header
 - **Édition du footer** : modification du texte du pied de page via la section Footer
+
+## TODO :
+
+- [ ] A la création d’un thème, rajouter par défaut la gestion des citations github
+- [ ] Pouvoir changer la taille du logo
+- [ ] Faire apparaitre ou non la date
+- [ ] Padding ou marge des H*
+- [ ] Dans l'interface, cacher le css par défaut et avoir une option pour le voir
+- [ ] Avoir la possibilité d'installer l'app (Electron ? Web ?)
 
 
 ## Structure du projet
