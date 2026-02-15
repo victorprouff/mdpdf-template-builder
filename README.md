@@ -27,6 +27,10 @@
 - [x] Pouvoir changer la taille du logo
 - [x] Faire apparaitre ou non la date
 - [x] Marges (top/bottom) des titres H1-H6
+- [ ] Régler la taille des paragraphes
+- [ ] Avoir des valeurs par défaut partout à la création d'un thème
+- [ ] Valeur par défaut droite et gauche du padding header : 40px
+
 - [ ] Dans l'interface, cacher le css par défaut et avoir une option pour le voir
 - [ ] Avoir la possibilité d'installer l'app (Electron ? Web ?)
 
