@@ -9,10 +9,10 @@
 - **Aperçu live A4** : rendu dans une iframe 794x1123px avec mise à l'échelle automatique
 - **Éditeur CSS** : éditeur CodeMirror avec coloration syntaxique
 - **Panneau accordéon** : sections Header, Footer, Marges et Titres collapsibles dans le sidebar
-- **Contrôles visuels** : panneau pour modifier font-size, couleur et alignement des titres (h1-h6)
+- **Contrôles visuels** : panneau pour modifier font-size, couleur, alignement et marges (top/bottom) des titres (h1-h6)
 - **Marges de page** : contrôles pour les marges `@page` (top, right, bottom, left) avec sélection de l'unité (mm, cm, px)
 - **Padding header/footer** : contrôles de padding internes pour le header et le footer, synchronisés avec le CSS et les fichiers HTML
-- **Variables CSS** : les propriétés modifiables sont variabilisées dans `:root` (convention `--hN-property`, `--header-padding-*`, `--footer-padding-*`, `--logo-height`, `--show-date`)
+- **Variables CSS** : les propriétés modifiables sont variabilisées dans `:root` (convention `--hN-property`, `--hN-margin-top`, `--hN-margin-bottom`, `--header-padding-*`, `--footer-padding-*`, `--logo-height`, `--show-date`)
 - **Sauvegarde auto** : les modifications sont sauvegardées automatiquement sur le disque
 - **Hot reload** : les modifications externes du fichier template sont détectées via WebSocket
 - **Thème clair/sombre** : basculer via le bouton dans la toolbar
@@ -26,7 +26,7 @@
 - [ ] A la création d'un thème, rajouter par défaut la gestion des citations github
 - [x] Pouvoir changer la taille du logo
 - [x] Faire apparaitre ou non la date
-- [ ] Padding ou marge des H*
+- [x] Marges (top/bottom) des titres H1-H6
 - [ ] Dans l'interface, cacher le css par défaut et avoir une option pour le voir
 - [ ] Avoir la possibilité d'installer l'app (Electron ? Web ?)
 
@@ -78,8 +78,12 @@ Les propriétés modifiables via le panneau de contrôles sont déclarées dans 
     --h1-font-size: 14pt;
     --h1-color: #153644;
     --h1-text-align: center;
+    --h1-margin-top: 0px;
+    --h1-margin-bottom: 15px;
     --h2-font-size: 12pt;
     --h2-color: #dcc29a;
+    --h2-margin-top: 5px;
+    --h2-margin-bottom: 5px;
     --header-padding-top: 10px;
     --header-padding-right: 20px;
     --header-padding-bottom: 5px;
@@ -94,6 +98,8 @@ h1 {
     font-size: var(--h1-font-size);
     color: var(--h1-color);
     text-align: var(--h1-text-align);
+    margin-top: var(--h1-margin-top);
+    margin-bottom: var(--h1-margin-bottom);
 }
 ```
 

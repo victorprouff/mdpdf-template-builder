@@ -1,5 +1,5 @@
 /**
- * Heading controls panel (h1-h6): font-size, color, text-align.
+ * Heading controls panel (h1-h6): font-size, color, text-align, margin-top/bottom.
  * Bidirectional sync with the CSS editor.
  */
 const Controls = (() => {
@@ -9,10 +9,19 @@ const Controls = (() => {
 
   const HEADINGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
   const ALIGNS = ['left', 'center', 'right'];
+  const MARGIN_DEFAULTS = {
+    h1: { marginTop: '0', marginBottom: '15' },
+    h2: { marginTop: '5', marginBottom: '5' },
+    h3: { marginTop: '20', marginBottom: '10' },
+    h4: { marginTop: '20', marginBottom: '10' },
+    h5: { marginTop: '0', marginBottom: '0' },
+    h6: { marginTop: '0', marginBottom: '0' },
+  };
 
   function init() {
     HEADINGS.forEach(h => {
-      state[h] = { fontSize: '', fontSizeUnit: 'pt', color: '#333333', textAlign: '' };
+      const md = MARGIN_DEFAULTS[h];
+      state[h] = { fontSize: '', fontSizeUnit: 'pt', color: '#333333', textAlign: '', marginTop: md.marginTop, marginBottom: md.marginBottom, marginUnit: 'px' };
       container.appendChild(createGroup(h));
     });
   }
@@ -67,7 +76,39 @@ const Controls = (() => {
     });
 
     row.append(sizeLabel, sizeInput, unitSelect, colorInput, alignDiv);
-    group.append(title, row);
+
+    // Padding row
+    const padRow = document.createElement('div');
+    padRow.className = 'heading-row';
+
+    const padTopLabel = el('label', 'M. haut');
+    const padTopInput = el('input');
+    padTopInput.type = 'number';
+    padTopInput.min = '0';
+    padTopInput.max = '200';
+    padTopInput.dataset.prop = 'marginTop';
+    padTopInput.addEventListener('input', () => handleChange(h, 'marginTop', padTopInput.value));
+
+    const padBottomLabel = el('label', 'M. bas');
+    const padBottomInput = el('input');
+    padBottomInput.type = 'number';
+    padBottomInput.min = '0';
+    padBottomInput.max = '200';
+    padBottomInput.dataset.prop = 'marginBottom';
+    padBottomInput.addEventListener('input', () => handleChange(h, 'marginBottom', padBottomInput.value));
+
+    const padUnitSelect = el('select');
+    ['px', 'pt', 'em'].forEach(u => {
+      const o = el('option');
+      o.value = u; o.textContent = u;
+      padUnitSelect.appendChild(o);
+    });
+    padUnitSelect.dataset.prop = 'marginUnit';
+    padUnitSelect.addEventListener('change', () => handleChange(h, 'marginUnit', padUnitSelect.value));
+
+    padRow.append(padTopLabel, padTopInput, padBottomLabel, padBottomInput, padUnitSelect);
+
+    group.append(title, row, padRow);
     return group;
   }
 
@@ -102,7 +143,8 @@ const Controls = (() => {
       const group = container.querySelector(`[data-heading="${h}"]`);
       if (!group) return;
 
-      const row = group.querySelector('.heading-row');
+      const rows = group.querySelectorAll('.heading-row');
+      const row = rows[0];
       const sizeInput = row.querySelector('[data-prop="fontSize"]');
       const unitSelect = row.querySelector('[data-prop="fontSizeUnit"]');
       const colorInput = row.querySelector('[data-prop="color"]');
@@ -110,6 +152,15 @@ const Controls = (() => {
       if (sizeInput) sizeInput.value = state[h].fontSize;
       if (unitSelect) unitSelect.value = state[h].fontSizeUnit;
       if (colorInput) colorInput.value = toHex(state[h].color);
+
+      if (rows[1]) {
+        const padTopInput = rows[1].querySelector('[data-prop="marginTop"]');
+        const padBottomInput = rows[1].querySelector('[data-prop="marginBottom"]');
+        const padUnitSelect = rows[1].querySelector('[data-prop="marginUnit"]');
+        if (padTopInput) padTopInput.value = state[h].marginTop;
+        if (padBottomInput) padBottomInput.value = state[h].marginBottom;
+        if (padUnitSelect) padUnitSelect.value = state[h].marginUnit;
+      }
 
       updateAlignButtons(h);
     });

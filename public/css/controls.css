@@ -50,7 +50,7 @@
 .heading-row label {
   font-size: 11px;
   color: var(--text-muted);
-  width: 40px;
+  width: 48px;
   flex-shrink: 0;
 }
 

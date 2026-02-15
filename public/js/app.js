@@ -178,13 +178,16 @@
     currentName = name;
     const res = await fetch(`/api/templates/${encodeURIComponent(name)}`);
     const tpl = await res.json();
-    currentCss = tpl.css;
-    CssEditor.setValue(tpl.css);
-    Controls.setFromStyles(parseHeadingStyles(tpl.css));
-    Margins.setFromCss(tpl.css);
+    currentCss = ensureHeadingMargins(tpl.css);
+    CssEditor.setValue(currentCss);
+    Controls.setFromStyles(parseHeadingStyles(currentCss));
+    Margins.setFromCss(currentCss);
     HeaderFooter.setData({ logo: tpl.logo, footerText: extractFooterText(tpl.footer) });
-    HeaderFooter.setPaddings(parseAreaPaddings(tpl.css));
-    HeaderFooter.setHeaderOptions(parseHeaderOptions(tpl.css));
+    HeaderFooter.setPaddings(parseAreaPaddings(currentCss));
+    HeaderFooter.setHeaderOptions(parseHeaderOptions(currentCss));
+    if (currentCss !== tpl.css) {
+      scheduleSave();
+    }
     Preview.load(name);
     WsClient.send({ type: 'watch-template', name });
   }
@@ -301,6 +304,48 @@
 
 
   /**
+   * Inject default heading margins into CSS when missing.
+   */
+  function ensureHeadingMargins(css) {
+    const MARGIN_DEFAULTS = {
+      h1: { top: '0', bottom: '15' },
+      h2: { top: '5', bottom: '5' },
+      h3: { top: '20', bottom: '10' },
+      h4: { top: '20', bottom: '10' },
+      h5: { top: '0', bottom: '0' },
+      h6: { top: '0', bottom: '0' },
+    };
+
+    // Check which headings already have margin declarations
+    const ruleRegex = /(?:^|\n)\s*(h[1-6])\s*\{([^}]*)\}/g;
+    const found = {};
+    let match;
+    while ((match = ruleRegex.exec(css)) !== null) {
+      const sel = match[1];
+      const body = match[2];
+      if (!found[sel]) found[sel] = {};
+      if (/margin-top\s*:/.test(body)) found[sel].top = true;
+      if (/margin-bottom\s*:/.test(body)) found[sel].bottom = true;
+    }
+
+    for (const [h, defaults] of Object.entries(MARGIN_DEFAULTS)) {
+      const f = found[h] || {};
+      if (!f.top) {
+        const varName = `--${h}-margin-top`;
+        css = setOrCreateCssVar(css, varName, `${defaults.top}px`);
+        css = updateCssProp(css, h, 'margin-top', `var(${varName})`);
+      }
+      if (!f.bottom) {
+        const varName = `--${h}-margin-bottom`;
+        css = setOrCreateCssVar(css, varName, `${defaults.bottom}px`);
+        css = updateCssProp(css, h, 'margin-bottom', `var(${varName})`);
+      }
+    }
+
+    return css;
+  }
+
+  /**
    * Parse heading styles from CSS (simple regex extraction).
    * Resolves var() references to actual hex values.
    */
@@ -308,7 +353,18 @@
     const vars = parseCssVars(css);
     const headings = {};
     for (let i = 1; i <= 6; i++) {
-      headings[`h${i}`] = { fontSize: '', fontSizeUnit: 'pt', color: '', textAlign: '' };
+      headings[`h${i}`] = { fontSize: '', fontSizeUnit: 'pt', color: '', textAlign: '', marginTop: '', marginBottom: '', marginUnit: 'px' };
+    }
+    const MARGIN_DEFAULTS = {
+      h1: { marginTop: '0', marginBottom: '15' },
+      h2: { marginTop: '5', marginBottom: '5' },
+      h3: { marginTop: '20', marginBottom: '10' },
+      h4: { marginTop: '20', marginBottom: '10' },
+      h5: { marginTop: '0', marginBottom: '0' },
+      h6: { marginTop: '0', marginBottom: '0' },
+    };
+    for (let i = 1; i <= 6; i++) {
+      Object.assign(headings[`h${i}`], MARGIN_DEFAULTS[`h${i}`]);
     }
 
     const ruleRegex = /(?:^|\n)\s*(h[1-6])\s*\{([^}]*)\}/g;
@@ -332,6 +388,26 @@
 
       const ta = body.match(/text-align\s*:\s*([^;]+);/);
       if (ta) headings[sel].textAlign = resolveVar(ta[1].trim(), vars);
+
+      const mt = body.match(/margin-top\s*:\s*([^;]+);/);
+      if (mt) {
+        const resolved = resolveVar(mt[1].trim(), vars);
+        const parsed = resolved.match(/^([\d.]+)\s*(px|pt|em|rem)$/);
+        if (parsed) {
+          headings[sel].marginTop = parsed[1];
+          headings[sel].marginUnit = parsed[2];
+        }
+      }
+
+      const mb = body.match(/margin-bottom\s*:\s*([^;]+);/);
+      if (mb) {
+        const resolved = resolveVar(mb[1].trim(), vars);
+        const parsed = resolved.match(/^([\d.]+)\s*(px|pt|em|rem)$/);
+        if (parsed) {
+          headings[sel].marginBottom = parsed[1];
+          if (!headings[sel].marginTop) headings[sel].marginUnit = parsed[2];
+        }
+      }
     }
 
     return headings;
@@ -409,6 +485,18 @@
       const varName = `--${heading}-text-align`;
       css = setOrCreateCssVar(css, varName, value);
       css = updateCssProp(css, heading, 'text-align', `var(${varName})`);
+    } else if (prop === 'marginTop' || prop === 'marginBottom' || prop === 'marginUnit') {
+      const s = state[heading];
+      if (s.marginTop) {
+        const varName = `--${heading}-margin-top`;
+        css = setOrCreateCssVar(css, varName, `${s.marginTop}${s.marginUnit}`);
+        css = updateCssProp(css, heading, 'margin-top', `var(${varName})`);
+      }
+      if (s.marginBottom) {
+        const varName = `--${heading}-margin-bottom`;
+        css = setOrCreateCssVar(css, varName, `${s.marginBottom}${s.marginUnit}`);
+        css = updateCssProp(css, heading, 'margin-bottom', `var(${varName})`);
+      }
     }
     return css;
   }

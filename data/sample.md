@@ -1,5 +1,5 @@
 ---
-template: formation
+template: test
 ---
 
 # Titre principal du document

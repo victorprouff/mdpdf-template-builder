@@ -6,7 +6,18 @@ function extractHeadingStyles(css) {
   const vars = parseCssVars(css);
   const headings = {};
   for (let i = 1; i <= 6; i++) {
-    headings[`h${i}`] = { fontSize: '', fontSizeUnit: 'pt', color: '', textAlign: '' };
+    headings[`h${i}`] = { fontSize: '', fontSizeUnit: 'pt', color: '', textAlign: '', marginTop: '', marginBottom: '', marginUnit: 'px' };
+  }
+  const MARGIN_DEFAULTS = {
+    h1: { marginTop: '0', marginBottom: '15' },
+    h2: { marginTop: '5', marginBottom: '5' },
+    h3: { marginTop: '20', marginBottom: '10' },
+    h4: { marginTop: '20', marginBottom: '10' },
+    h5: { marginTop: '0', marginBottom: '0' },
+    h6: { marginTop: '0', marginBottom: '0' },
+  };
+  for (let i = 1; i <= 6; i++) {
+    Object.assign(headings[`h${i}`], MARGIN_DEFAULTS[`h${i}`]);
   }
 
   // Match standalone heading rules: h1 { ... }, h2 { ... } etc.
@@ -32,6 +43,20 @@ function extractHeadingStyles(css) {
     const textAlign = extractProperty(body, 'text-align');
     if (textAlign) {
       headings[selector].textAlign = resolveVar(textAlign, vars);
+    }
+
+    const marginTop = extractProperty(body, 'margin-top');
+    if (marginTop) {
+      const parsed = parseSize(resolveVar(marginTop, vars));
+      headings[selector].marginTop = parsed.value;
+      headings[selector].marginUnit = parsed.unit;
+    }
+
+    const marginBottom = extractProperty(body, 'margin-bottom');
+    if (marginBottom) {
+      const parsed = parseSize(resolveVar(marginBottom, vars));
+      headings[selector].marginBottom = parsed.value;
+      if (!marginTop) headings[selector].marginUnit = parsed.unit;
     }
   }
 
