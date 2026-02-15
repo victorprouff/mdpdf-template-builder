@@ -10,21 +10,22 @@
 - **Éditeur CSS** : éditeur CodeMirror avec coloration syntaxique
 - **Panneau accordéon** : sections Header, Footer, Marges et Titres collapsibles dans le sidebar
 - **Contrôles visuels** : panneau pour modifier font-size, couleur et alignement des titres (h1-h6)
-- **Marges de page** : contrôles pour les marges `@page` (top, right, bottom, left)
+- **Marges de page** : contrôles pour les marges `@page` (top, right, bottom, left) avec sélection de l'unité (mm, cm, px)
 - **Padding header/footer** : contrôles de padding internes pour le header et le footer, synchronisés avec le CSS et les fichiers HTML
-- **Variables CSS** : les propriétés modifiables sont variabilisées dans `:root` (convention `--hN-property`, `--header-padding-*`, `--footer-padding-*`)
+- **Variables CSS** : les propriétés modifiables sont variabilisées dans `:root` (convention `--hN-property`, `--header-padding-*`, `--footer-padding-*`, `--logo-height`, `--show-date`)
 - **Sauvegarde auto** : les modifications sont sauvegardées automatiquement sur le disque
 - **Hot reload** : les modifications externes du fichier template sont détectées via WebSocket
 - **Thème clair/sombre** : basculer via le bouton dans la toolbar
 - **Création de template** : bouton "+" pour créer un nouveau template avec fichiers par défaut
-- **Gestion du logo** : upload/remplacement du logo via la section Header
+- **Gestion du logo** : upload/remplacement du logo via la section Header, avec contrôle de la hauteur
+- **Visibilité de la date** : afficher ou masquer la date dans le header via une checkbox
 - **Édition du footer** : modification du texte du pied de page via la section Footer
 
 ## TODO :
 
-- [ ] A la création d’un thème, rajouter par défaut la gestion des citations github
-- [ ] Pouvoir changer la taille du logo
-- [ ] Faire apparaitre ou non la date
+- [ ] A la création d'un thème, rajouter par défaut la gestion des citations github
+- [x] Pouvoir changer la taille du logo
+- [x] Faire apparaitre ou non la date
 - [ ] Padding ou marge des H*
 - [ ] Dans l'interface, cacher le css par défaut et avoir une option pour le voir
 - [ ] Avoir la possibilité d'installer l'app (Electron ? Web ?)
@@ -48,7 +49,7 @@ public/
   js/app.js                 # Orchestrateur principal
   js/controls.js            # Panneau de contrôles (h1-h6)
   js/css-editor.js          # Wrapper CodeMirror
-  js/header-footer.js       # Upload logo + édition footer + padding header/footer
+  js/header-footer.js       # Upload logo + hauteur logo + date + édition footer + padding header/footer
   js/margins.js             # Contrôles des marges @page
   js/preview.js             # Gestion iframe + scaling
   js/template-selector.js   # Sélection + création de template
@@ -84,6 +85,8 @@ Les propriétés modifiables via le panneau de contrôles sont déclarées dans 
     --header-padding-bottom: 5px;
     --header-padding-left: 20px;
     --footer-padding-top: 5px;
+    --logo-height: 60px;
+    --show-date: 1;
     /* ... */
 }
 
@@ -94,7 +97,7 @@ h1 {
 }
 ```
 
-> **Note** : les variables `--header-padding-*` et `--footer-padding-*` sont aussi appliquées en inline dans `header.html` et `footer.html` pour être prises en compte par mdpdf lors de la génération PDF.
+> **Note** : les variables `--header-padding-*`, `--footer-padding-*`, `--logo-height` et `--show-date` sont aussi appliquées en inline dans `header.html` pour être prises en compte par mdpdf lors de la génération PDF (Puppeteer rend le header/footer dans un contexte CSS isolé).
 
 ## Installation
 
@@ -122,6 +125,7 @@ Ouvrir http://localhost:3000.
 | `PUT`   | `/api/templates/:name/css`    | Sauvegarde le CSS d'un template                |
 | `PUT`   | `/api/templates/:name/footer` | Sauvegarde le texte du footer                  |
 | `PUT`   | `/api/templates/:name/padding`| Sauvegarde le padding header ou footer          |
+| `PUT`   | `/api/templates/:name/header-options`| Sauvegarde la hauteur du logo et la visibilité de la date |
 | `POST`  | `/api/templates/:name/logo`   | Upload/remplacement du logo (base64, max 5 Mo) |
 | `GET`   | `/api/preview/:name`          | HTML complet de l'aperçu A4                    |
 

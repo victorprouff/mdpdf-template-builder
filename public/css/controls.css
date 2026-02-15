@@ -158,6 +158,16 @@
   color: var(--text-muted);
 }
 
+.margin-unit-select {
+  width: 46px;
+  padding: 2px 1px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: 3px;
+  color: var(--text-primary);
+  font-size: 11px;
+}
+
 /* New template button */
 .btn-new-template {
   width: 30px;

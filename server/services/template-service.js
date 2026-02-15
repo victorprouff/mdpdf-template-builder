@@ -66,6 +66,8 @@ function createTemplate(name) {
     --h1-color: #333333;
     --h2-font-size: 18pt;
     --h2-color: #333333;
+    --logo-height: 60px;
+    --show-date: 1;
 }
 
 @page {
@@ -142,6 +144,39 @@ function savePadding(name, area, paddings) {
   fs.writeFileSync(filePath, html, 'utf-8');
 }
 
+function saveHeaderOptions(name, { logoHeight, showDate }) {
+  const dir = getTemplatePath(name);
+  if (!fs.existsSync(dir)) {
+    throw new Error(`Template "${name}" not found`);
+  }
+  const filePath = path.join(dir, 'header.html');
+  if (!fs.existsSync(filePath)) return;
+
+  let html = fs.readFileSync(filePath, 'utf-8');
+
+  // Update logo height in img style
+  const heightVal = logoHeight || '60px';
+  if (/height\s*:\s*[\d]+px/.test(html)) {
+    html = html.replace(/height\s*:\s*[\d]+px/, `height: ${parseInt(heightVal)}px`);
+  }
+
+  // Update date visibility on the span containing {{DATE}}
+  // First, remove any existing display: none from the date span
+  html = html.replace(
+    /(<span\s+style=")display\s*:\s*none;\s*([^"]*"[^>]*>\s*\{\{DATE\}\})/,
+    '$1$2'
+  );
+  // Then add display: none if date should be hidden
+  if (showDate === false) {
+    html = html.replace(
+      /(<span\s+style=")((?:(?!display\s*:\s*none)[^"])*"[^>]*>\s*\{\{DATE\}\})/,
+      '$1display: none; $2'
+    );
+  }
+
+  fs.writeFileSync(filePath, html, 'utf-8');
+}
+
 function saveLogo(name, dataUri) {
   const dir = getTemplatePath(name);
   if (!fs.existsSync(dir)) {
@@ -155,4 +190,4 @@ function saveLogo(name, dataUri) {
   fs.writeFileSync(path.join(dir, 'logo.png'), buffer);
 }
 
-module.exports = { listTemplates, loadTemplate, saveCss, getTemplatePath, TEMPLATES_DIR, createTemplate, saveFooter, saveLogo, savePadding };
+module.exports = { listTemplates, loadTemplate, saveCss, getTemplatePath, TEMPLATES_DIR, createTemplate, saveFooter, saveLogo, savePadding, saveHeaderOptions };

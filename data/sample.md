@@ -21,8 +21,6 @@ Voici un lien vers [un site web](https://example.com) et une citation :
 
 ###### Niveau 6
 
----
-
 ## Listes
 
 ### Liste non ordonnée

@@ -66,6 +66,20 @@ router.put('/templates/:name/padding', express.json(), (req, res) => {
   }
 });
 
+// Save header options (logo height, show date)
+router.put('/templates/:name/header-options', express.json(), (req, res) => {
+  try {
+    markSelfWrite();
+    templateService.saveHeaderOptions(req.params.name, {
+      logoHeight: req.body.logoHeight,
+      showDate: req.body.showDate
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // Upload/replace logo for a template
 router.post('/templates/:name/logo', express.json({ limit: '5mb' }), (req, res) => {
   try {

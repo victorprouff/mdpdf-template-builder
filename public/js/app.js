@@ -42,6 +42,7 @@
     Controls.setFromStyles(parseHeadingStyles(css));
     Margins.setFromCss(css);
     HeaderFooter.setPaddings(parseAreaPaddings(css));
+    HeaderFooter.setHeaderOptions(parseHeaderOptions(css));
     scheduleSave();
   });
 
@@ -54,13 +55,13 @@
     scheduleSave();
   });
 
-  // ── Margins change -> update CSS + preview + editor ──
-  Margins.setOnChange((margins) => {
+  // ── Margins change -> update CSS + save + reload preview ──
+  Margins.setOnChange(async (margins) => {
     const newCss = applyMarginChange(currentCss, margins);
     currentCss = newCss;
     CssEditor.setValue(newCss);
-    Preview.updateCss(newCss);
-    scheduleSave();
+    await saveCss();
+    Preview.load(currentName);
   });
 
   // ── Header/Footer padding change -> update CSS variables + editor + HTML + reload preview ──
@@ -80,6 +81,18 @@
     Preview.load(currentName);
   });
 
+  // ── Header options (logo height, show date) change ──
+  HeaderFooter.setOnHeaderOptionsChange(async ({ logoHeight, showDate }) => {
+    let css = currentCss;
+    css = setOrCreateCssVar(css, '--logo-height', logoHeight);
+    css = setOrCreateCssVar(css, '--show-date', showDate ? '1' : '0');
+    currentCss = css;
+    CssEditor.setValue(css);
+    await saveCss();
+    await saveHeaderOptions(logoHeight, showDate);
+    Preview.load(currentName);
+  });
+
   // ── WebSocket: external file changes ──
   WsClient.on('file-changed', async (msg) => {
     if (msg.name === currentName) {
@@ -95,6 +108,7 @@
       Controls.setFromStyles(parseHeadingStyles(msg.css));
       Margins.setFromCss(msg.css);
       HeaderFooter.setPaddings(parseAreaPaddings(msg.css));
+      HeaderFooter.setHeaderOptions(parseHeaderOptions(msg.css));
     }
   });
 
@@ -170,6 +184,7 @@
     Margins.setFromCss(tpl.css);
     HeaderFooter.setData({ logo: tpl.logo, footerText: extractFooterText(tpl.footer) });
     HeaderFooter.setPaddings(parseAreaPaddings(tpl.css));
+    HeaderFooter.setHeaderOptions(parseHeaderOptions(tpl.css));
     Preview.load(name);
     WsClient.send({ type: 'watch-template', name });
   }
@@ -214,6 +229,29 @@
       setTimeout(() => { saveStatus.textContent = ''; }, 2000);
     } catch {
       saveStatus.textContent = 'Erreur sauvegarde';
+    }
+  }
+
+  /**
+   * Parse logo height and show-date from CSS variables.
+   */
+  function parseHeaderOptions(css) {
+    const vars = parseCssVars(css);
+    return {
+      logoHeight: vars['--logo-height'] || '60px',
+      showDate: vars['--show-date'] !== '0'
+    };
+  }
+
+  async function saveHeaderOptions(logoHeight, showDate) {
+    try {
+      await fetch(`/api/templates/${encodeURIComponent(currentName)}/header-options`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logoHeight, showDate })
+      });
+    } catch {
+      saveStatus.textContent = 'Erreur header options';
     }
   }
 

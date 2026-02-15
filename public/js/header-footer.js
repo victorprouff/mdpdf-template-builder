@@ -7,7 +7,9 @@ const HeaderFooter = (() => {
   let onLogoChange = null;
   let onFooterChange = null;
   let onPaddingChange = null;
+  let onHeaderOptionsChange = null;
   let debounceTimer = null;
+  let headerOptionsTimer = null;
   const SIDES = ['top', 'right', 'bottom', 'left'];
   const LABELS = { top: 'Haut', right: 'Droite', bottom: 'Bas', left: 'Gauche' };
 
@@ -46,6 +48,16 @@ const HeaderFooter = (() => {
     });
 
     container.append(label, grid);
+  }
+
+  function fireHeaderOptionsChange() {
+    if (!onHeaderOptionsChange) return;
+    const heightInput = document.getElementById('logo-height-input');
+    const dateCheckbox = document.getElementById('show-date-checkbox');
+    onHeaderOptionsChange({
+      logoHeight: heightInput ? `${heightInput.value}px` : '60px',
+      showDate: dateCheckbox ? dateCheckbox.checked : true
+    });
   }
 
   function firePaddingChange(area) {
@@ -105,7 +117,58 @@ const HeaderFooter = (() => {
     });
 
     logoRow.append(logoThumb, logoPlaceholder, logoBtn, fileInput);
-    logoSection.append(logoLabel, logoRow);
+
+    // Logo height input
+    const heightRow = document.createElement('div');
+    heightRow.className = 'logo-height-row';
+    heightRow.style.display = 'flex';
+    heightRow.style.alignItems = 'center';
+    heightRow.style.gap = '8px';
+    heightRow.style.marginTop = '8px';
+
+    const heightLabel = document.createElement('label');
+    heightLabel.textContent = 'Hauteur';
+    heightLabel.style.fontSize = '12px';
+
+    const heightInput = document.createElement('input');
+    heightInput.type = 'number';
+    heightInput.id = 'logo-height-input';
+    heightInput.min = '10';
+    heightInput.max = '300';
+    heightInput.value = '60';
+    heightInput.style.width = '70px';
+    heightInput.addEventListener('input', () => {
+      clearTimeout(headerOptionsTimer);
+      headerOptionsTimer = setTimeout(() => fireHeaderOptionsChange(), 500);
+    });
+
+    const heightUnit = document.createElement('span');
+    heightUnit.className = 'margin-unit-label';
+    heightUnit.textContent = 'px';
+
+    heightRow.append(heightLabel, heightInput, heightUnit);
+
+    // Show date checkbox
+    const dateRow = document.createElement('div');
+    dateRow.style.display = 'flex';
+    dateRow.style.alignItems = 'center';
+    dateRow.style.gap = '8px';
+    dateRow.style.marginTop = '8px';
+
+    const dateCheckbox = document.createElement('input');
+    dateCheckbox.type = 'checkbox';
+    dateCheckbox.id = 'show-date-checkbox';
+    dateCheckbox.checked = true;
+    dateCheckbox.addEventListener('change', () => fireHeaderOptionsChange());
+
+    const dateLabel = document.createElement('label');
+    dateLabel.textContent = 'Afficher la date';
+    dateLabel.style.fontSize = '12px';
+    dateLabel.htmlFor = 'show-date-checkbox';
+
+    dateRow.append(dateCheckbox, dateLabel);
+
+    logoSection.append(logoLabel, logoRow, heightRow, dateRow);
     headerContainer.append(logoSection);
 
     // Padding controls for header
@@ -172,9 +235,17 @@ const HeaderFooter = (() => {
     });
   }
 
+  function setHeaderOptions({ logoHeight, showDate }) {
+    const heightInput = document.getElementById('logo-height-input');
+    const dateCheckbox = document.getElementById('show-date-checkbox');
+    if (heightInput) heightInput.value = parseInt(logoHeight) || 60;
+    if (dateCheckbox) dateCheckbox.checked = showDate;
+  }
+
   function setOnLogoChange(fn) { onLogoChange = fn; }
   function setOnFooterChange(fn) { onFooterChange = fn; }
   function setOnPaddingChange(fn) { onPaddingChange = fn; }
+  function setOnHeaderOptionsChange(fn) { onHeaderOptionsChange = fn; }
 
-  return { init, setData, setPaddings, setOnLogoChange, setOnFooterChange, setOnPaddingChange };
+  return { init, setData, setPaddings, setHeaderOptions, setOnLogoChange, setOnFooterChange, setOnPaddingChange, setOnHeaderOptionsChange };
 })();

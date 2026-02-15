@@ -7,8 +7,10 @@ const Margins = (() => {
   let onChange = null;
   const SIDES = ['top', 'right', 'bottom', 'left'];
   const LABELS = { top: 'Haut', right: 'Droite', bottom: 'Bas', left: 'Gauche' };
-  const UNIT = 'px';
+  const DEFAULT_UNIT = 'mm';
+  const SUPPORTED_UNITS = ['mm', 'cm', 'px'];
   const state = { top: '', right: '', bottom: '', left: '' };
+  const units = { top: DEFAULT_UNIT, right: DEFAULT_UNIT, bottom: DEFAULT_UNIT, left: DEFAULT_UNIT };
 
   function init() {
     const grid = document.createElement('div');
@@ -31,11 +33,22 @@ const Margins = (() => {
         fireChange();
       });
 
-      const unitLabel = document.createElement('span');
-      unitLabel.className = 'margin-unit-label';
-      unitLabel.textContent = UNIT;
+      const unitSelect = document.createElement('select');
+      unitSelect.className = 'margin-unit-select';
+      unitSelect.dataset.unitSide = side;
+      SUPPORTED_UNITS.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u;
+        opt.textContent = u;
+        if (u === DEFAULT_UNIT) opt.selected = true;
+        unitSelect.appendChild(opt);
+      });
+      unitSelect.addEventListener('change', () => {
+        units[side] = unitSelect.value;
+        fireChange();
+      });
 
-      group.append(label, input, unitLabel);
+      group.append(label, input, unitSelect);
       grid.appendChild(group);
     });
 
@@ -46,7 +59,7 @@ const Margins = (() => {
     if (!onChange) return;
     const margins = {};
     SIDES.forEach(s => {
-      margins[s] = state[s] ? `${state[s]}${UNIT}` : '';
+      margins[s] = state[s] ? `${state[s]}${units[s]}` : '';
     });
     onChange(margins);
   }
@@ -66,6 +79,7 @@ const Margins = (() => {
       const m = body.match(re);
       if (m) {
         state[side] = m[1];
+        units[side] = m[2].toLowerCase();
         found = true;
       }
     });
@@ -82,6 +96,8 @@ const Margins = (() => {
     SIDES.forEach(side => {
       const input = container.querySelector(`[data-side="${side}"]`);
       if (input) input.value = state[side];
+      const unitSelect = container.querySelector(`[data-unit-side="${side}"]`);
+      if (unitSelect) unitSelect.value = units[side];
     });
   }
 
@@ -89,25 +105,29 @@ const Margins = (() => {
     const parts = value.trim().split(/\s+/);
     const parsed = parts.map(p => {
       const m = p.match(/^([\d.]+)\s*(mm|cm|px)$/i);
-      return m ? { val: m[1] } : null;
+      return m ? { val: m[1], unit: m[2].toLowerCase() } : null;
     }).filter(Boolean);
 
     if (parsed.length === 0) return;
 
+    const assign = (sides, item) => {
+      sides.forEach(s => { state[s] = item.val; units[s] = item.unit; });
+    };
+
     if (parsed.length === 1) {
-      state.top = state.right = state.bottom = state.left = parsed[0].val;
+      assign(['top', 'right', 'bottom', 'left'], parsed[0]);
     } else if (parsed.length === 2) {
-      state.top = state.bottom = parsed[0].val;
-      state.right = state.left = parsed[1].val;
+      assign(['top', 'bottom'], parsed[0]);
+      assign(['right', 'left'], parsed[1]);
     } else if (parsed.length === 3) {
-      state.top = parsed[0].val;
-      state.right = state.left = parsed[1].val;
-      state.bottom = parsed[2].val;
+      assign(['top'], parsed[0]);
+      assign(['right', 'left'], parsed[1]);
+      assign(['bottom'], parsed[2]);
     } else {
-      state.top = parsed[0].val;
-      state.right = parsed[1].val;
-      state.bottom = parsed[2].val;
-      state.left = parsed[3].val;
+      assign(['top'], parsed[0]);
+      assign(['right'], parsed[1]);
+      assign(['bottom'], parsed[2]);
+      assign(['left'], parsed[3]);
     }
   }
 
