@@ -6,7 +6,7 @@ function extractHeadingStyles(css) {
   const vars = parseCssVars(css);
   const headings = {};
   for (let i = 1; i <= 6; i++) {
-    headings[`h${i}`] = { fontSize: '', fontSizeUnit: 'pt', color: '', textAlign: '', marginTop: '', marginBottom: '', marginUnit: 'px' };
+    headings[`h${i}`] = { fontSize: '', fontSizeUnit: 'pt', color: '', textAlign: '', marginTop: '', marginBottom: '', marginUnit: 'px', pageBreakBefore: false };
   }
   const MARGIN_DEFAULTS = {
     h1: { marginTop: '0', marginBottom: '15' },
@@ -57,6 +57,11 @@ function extractHeadingStyles(css) {
       const parsed = parseSize(resolveVar(marginBottom, vars));
       headings[selector].marginBottom = parsed.value;
       if (!marginTop) headings[selector].marginUnit = parsed.unit;
+    }
+
+    const pageBreakBefore = extractProperty(body, 'page-break-before');
+    if (pageBreakBefore) {
+      headings[selector].pageBreakBefore = resolveVar(pageBreakBefore, vars) === 'always';
     }
   }
 

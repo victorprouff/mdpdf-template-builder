@@ -353,7 +353,7 @@
     const vars = parseCssVars(css);
     const headings = {};
     for (let i = 1; i <= 6; i++) {
-      headings[`h${i}`] = { fontSize: '', fontSizeUnit: 'pt', color: '', textAlign: '', marginTop: '', marginBottom: '', marginUnit: 'px' };
+      headings[`h${i}`] = { fontSize: '', fontSizeUnit: 'pt', color: '', textAlign: '', marginTop: '', marginBottom: '', marginUnit: 'px', pageBreakBefore: false };
     }
     const MARGIN_DEFAULTS = {
       h1: { marginTop: '0', marginBottom: '15' },
@@ -407,6 +407,12 @@
           headings[sel].marginBottom = parsed[1];
           if (!headings[sel].marginTop) headings[sel].marginUnit = parsed[2];
         }
+      }
+
+      const pbb = body.match(/page-break-before\s*:\s*([^;]+);/);
+      if (pbb) {
+        const resolved = resolveVar(pbb[1].trim(), vars);
+        headings[sel].pageBreakBefore = resolved === 'always';
       }
     }
 
@@ -497,6 +503,15 @@
         css = setOrCreateCssVar(css, varName, `${s.marginBottom}${s.marginUnit}`);
         css = updateCssProp(css, heading, 'margin-bottom', `var(${varName})`);
       }
+    } else if (prop === 'pageBreakBefore') {
+      const varName = `--${heading}-page-break-before`;
+      if (value) {
+        css = setOrCreateCssVar(css, varName, 'always');
+        css = updateCssProp(css, heading, 'page-break-before', `var(${varName})`);
+      } else {
+        css = removeCssVar(css, varName);
+        css = removeCssProp(css, heading, 'page-break-before');
+      }
     }
     return css;
   }
@@ -533,5 +548,37 @@
         match[1] + newBody + match[4] +
         css.substring(match.index + match[0].length);
     }
+  }
+  /**
+   * Remove a CSS variable from :root.
+   */
+  function removeCssVar(css, varName) {
+    const escaped = varName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`[ \\t]*${escaped}\\s*:[^;]*;\\n?`);
+    return css.replace(regex, '');
+  }
+
+  /**
+   * Remove a CSS property from a rule block.
+   */
+  function removeCssProp(css, selector, property) {
+    const ruleRegex = new RegExp(`((?:^|\\n)(\\s*${selector}\\s*\\{))([^}]*)(\\})`, 'g');
+    let match = null;
+
+    while ((match = ruleRegex.exec(css)) !== null) {
+      const before = css.substring(Math.max(0, match.index - 5), match.index);
+      if (!before.match(/,\s*$/)) break;
+      match = null;
+    }
+
+    if (!match) return css;
+
+    const ruleBody = match[3];
+    const propRegex = new RegExp(`[ \\t]*${property}\\s*:[^;]*;\\n?`);
+    const newBody = ruleBody.replace(propRegex, '');
+
+    return css.substring(0, match.index) +
+      match[1] + newBody + match[4] +
+      css.substring(match.index + match[0].length);
   }
 })();

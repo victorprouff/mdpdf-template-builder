@@ -21,7 +21,7 @@ const Controls = (() => {
   function init() {
     HEADINGS.forEach(h => {
       const md = MARGIN_DEFAULTS[h];
-      state[h] = { fontSize: '', fontSizeUnit: 'pt', color: '#333333', textAlign: '', marginTop: md.marginTop, marginBottom: md.marginBottom, marginUnit: 'px' };
+      state[h] = { fontSize: '', fontSizeUnit: 'pt', color: '#333333', textAlign: '', marginTop: md.marginTop, marginBottom: md.marginBottom, marginUnit: 'px', pageBreakBefore: false };
       container.appendChild(createGroup(h));
     });
   }
@@ -108,7 +108,20 @@ const Controls = (() => {
 
     padRow.append(padTopLabel, padTopInput, padBottomLabel, padBottomInput, padUnitSelect);
 
-    group.append(title, row, padRow);
+    // Page break row
+    const breakRow = document.createElement('div');
+    breakRow.className = 'heading-row';
+
+    const breakLabel = el('label', 'Saut de page');
+    breakLabel.style.width = 'auto';
+    const breakCheckbox = el('input');
+    breakCheckbox.type = 'checkbox';
+    breakCheckbox.dataset.prop = 'pageBreakBefore';
+    breakCheckbox.addEventListener('change', () => handleChange(h, 'pageBreakBefore', breakCheckbox.checked));
+
+    breakRow.append(breakLabel, breakCheckbox);
+
+    group.append(title, row, padRow, breakRow);
     return group;
   }
 
@@ -160,6 +173,11 @@ const Controls = (() => {
         if (padTopInput) padTopInput.value = state[h].marginTop;
         if (padBottomInput) padBottomInput.value = state[h].marginBottom;
         if (padUnitSelect) padUnitSelect.value = state[h].marginUnit;
+      }
+
+      if (rows[2]) {
+        const breakCheckbox = rows[2].querySelector('[data-prop="pageBreakBefore"]');
+        if (breakCheckbox) breakCheckbox.checked = !!state[h].pageBreakBefore;
       }
 
       updateAlignButtons(h);
