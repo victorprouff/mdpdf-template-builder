@@ -121,8 +121,10 @@ html, body {
 .panel-left {
   width: 400px;
   min-width: 320px;
+  display: flex;
+  flex-direction: column;
   border-right: 1px solid var(--border-main);
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .panel-right {
@@ -133,6 +135,7 @@ html, body {
 }
 
 .panel-section {
+  flex-shrink: 0;
   padding: 12px;
   border-bottom: 1px solid var(--border-main);
   overflow-y: auto;
