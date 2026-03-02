@@ -19,6 +19,7 @@
   // ── Init modules ──
   CssEditor.init();
   Controls.init();
+  TextControls.init();
   HeaderFooter.init();
   Margins.init();
 
@@ -40,9 +41,19 @@
     currentCss = css;
     Preview.updateCss(css);
     Controls.setFromStyles(parseHeadingStyles(css));
+    TextControls.setFromCss(css);
     Margins.setFromCss(css);
     HeaderFooter.setPaddings(parseAreaPaddings(css));
     HeaderFooter.setHeaderOptions(parseHeaderOptions(css));
+    scheduleSave();
+  });
+
+  // ── TextControls change -> update CSS + preview + editor ──
+  TextControls.setOnChange((key, fontSize, fontSizeUnit) => {
+    const newCss = applyTextControlChange(currentCss, key, fontSize, fontSizeUnit);
+    currentCss = newCss;
+    CssEditor.setValue(newCss);
+    Preview.updateCss(newCss);
     scheduleSave();
   });
 
@@ -106,6 +117,7 @@
       CssEditor.setValue(msg.css);
       Preview.updateCss(msg.css);
       Controls.setFromStyles(parseHeadingStyles(msg.css));
+      TextControls.setFromCss(msg.css);
       Margins.setFromCss(msg.css);
       HeaderFooter.setPaddings(parseAreaPaddings(msg.css));
       HeaderFooter.setHeaderOptions(parseHeaderOptions(msg.css));
@@ -179,8 +191,10 @@
     const res = await fetch(`/api/templates/${encodeURIComponent(name)}`);
     const tpl = await res.json();
     currentCss = ensureHeadingMargins(tpl.css);
+    currentCss = ensureTextDefaults(currentCss);
     CssEditor.setValue(currentCss);
     Controls.setFromStyles(parseHeadingStyles(currentCss));
+    TextControls.setFromCss(currentCss);
     Margins.setFromCss(currentCss);
     HeaderFooter.setData({ logo: tpl.logo, footerText: extractFooterText(tpl.footer) });
     HeaderFooter.setPaddings(parseAreaPaddings(currentCss));
@@ -346,6 +360,24 @@
   }
 
   /**
+   * Inject default font-size for p, td/th, li when missing from the CSS.
+   */
+  function ensureTextDefaults(css) {
+    const DEFAULTS = { p: '10pt', td: '10pt', li: '10pt' };
+    for (const [key, defaultVal] of Object.entries(DEFAULTS)) {
+      const varName = `--${key}-font-size`;
+      if (!new RegExp(varName + '\\s*:').test(css)) {
+        css = setOrCreateCssVar(css, varName, defaultVal);
+        css = updateCssProp(css, key, 'font-size', `var(${varName})`);
+        if (key === 'td') {
+          css = updateCssProp(css, 'th', 'font-size', `var(${varName})`);
+        }
+      }
+    }
+    return css;
+  }
+
+  /**
    * Parse heading styles from CSS (simple regex extraction).
    * Resolves var() references to actual hex values.
    */
@@ -469,6 +501,24 @@
       return css.slice(0, rootEnd) + `    ${varName}: ${value};\n` + css.slice(rootEnd);
     }
     return `:root {\n    ${varName}: ${value};\n}\n\n` + css;
+  }
+
+  /**
+   * Apply a text element font-size change to the CSS.
+   * Writes --p/td/li-font-size in :root and updates the rule.
+   * For 'td', also updates the 'th' rule to share the same variable.
+   */
+  function applyTextControlChange(css, key, fontSize, fontSizeUnit) {
+    if (!fontSize) return css;
+    const varName = `--${key}-font-size`;
+    css = setOrCreateCssVar(css, varName, `${fontSize}${fontSizeUnit}`);
+    if (key === 'td') {
+      css = updateCssProp(css, 'td', 'font-size', `var(${varName})`);
+      css = updateCssProp(css, 'th', 'font-size', `var(${varName})`);
+    } else {
+      css = updateCssProp(css, key, 'font-size', `var(${varName})`);
+    }
+    return css;
   }
 
   /**

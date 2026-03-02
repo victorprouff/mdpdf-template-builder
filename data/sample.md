@@ -10,6 +10,16 @@ template: test
 
 Ceci est un paragraphe de texte standard avec du **gras**, de l'*italique* et du `code inline`. Les templates md2pdf permettent de personnaliser l'apparence de chaque élément.
 
+|Thématique|Poids|Ce qu'on évalue|
+|---|---|---|
+|Identités & accès|20%|Mots de passe, 2FA, gestion des droits|
+|Postes de travail|15%|Mises à jour, antivirus, chiffrement|
+|Sensibilisation humaine|25%|Phishing, réflexes, procédure incident|
+|Données & sauvegardes|20%|Fréquence, localisation, tests de restauration|
+|Continuité d'activité|15%|Plan de secours, contacts d'urgence, mode dégradé|
+|Gouvernance|5%|Responsable, budget, assurance cyber|
+
+
 #### Sous-section
 
 Voici un lien vers [un site web](https://example.com) et une citation :
