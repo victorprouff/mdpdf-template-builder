@@ -34,7 +34,7 @@
   <main class="layout">
     <!-- Left panel: controls + CSS editor -->
     <aside class="panel-left">
-      <div class="panel-section accordion open" data-accordion>
+      <div class="panel-section accordion" data-accordion>
         <h2 class="panel-heading accordion-toggle" data-accordion-toggle>
           Header
           <span class="accordion-chevron">&#9654;</span>
@@ -43,7 +43,7 @@
           <div id="header-controls"></div>
         </div>
       </div>
-      <div class="panel-section accordion open" data-accordion>
+      <div class="panel-section accordion" data-accordion>
         <h2 class="panel-heading accordion-toggle" data-accordion-toggle>
           Footer
           <span class="accordion-chevron">&#9654;</span>
@@ -52,7 +52,7 @@
           <div id="footer-controls"></div>
         </div>
       </div>
-      <div class="panel-section accordion open" data-accordion>
+      <div class="panel-section accordion" data-accordion>
         <h2 class="panel-heading accordion-toggle" data-accordion-toggle>
           Marges
           <span class="accordion-chevron">&#9654;</span>
@@ -61,7 +61,7 @@
           <div id="margin-controls"></div>
         </div>
       </div>
-      <div class="panel-section accordion open" data-accordion>
+      <div class="panel-section accordion" data-accordion>
         <h2 class="panel-heading accordion-toggle" data-accordion-toggle>
           Texte
           <span class="accordion-chevron">&#9654;</span>
@@ -70,7 +70,7 @@
           <div id="text-controls"></div>
         </div>
       </div>
-      <div class="panel-section accordion open" data-accordion>
+      <div class="panel-section accordion" data-accordion>
         <h2 class="panel-heading accordion-toggle" data-accordion-toggle>
           Titres
           <span class="accordion-chevron">&#9654;</span>
@@ -79,9 +79,14 @@
           <div id="heading-controls"></div>
         </div>
       </div>
-      <div class="panel-section panel-section--editor">
-        <h2 class="panel-heading">CSS</h2>
-        <div id="css-editor-container"></div>
+      <div class="panel-section accordion accordion--editor" data-accordion>
+        <h2 class="panel-heading accordion-toggle" data-accordion-toggle>
+          CSS
+          <span class="accordion-chevron">&#9654;</span>
+        </h2>
+        <div class="accordion-body">
+          <div id="css-editor-container"></div>
+        </div>
       </div>
     </aside>
 

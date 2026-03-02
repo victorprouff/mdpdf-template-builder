@@ -268,14 +268,18 @@
 
 /* CodeMirror container */
 #css-editor-container {
-  flex: 1;
-  overflow: hidden;
+  height: 400px;
 }
 
 #css-editor-container .CodeMirror {
   height: 100%;
   font-size: 12px;
   background: var(--bg-editor);
+}
+
+/* Editor accordion needs extra max-height to fit CodeMirror */
+.accordion--editor.open .accordion-body {
+  max-height: 500px;
 }
 
 /* Light theme CodeMirror overrides */

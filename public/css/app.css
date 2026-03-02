@@ -121,10 +121,8 @@ html, body {
 .panel-left {
   width: 400px;
   min-width: 320px;
-  display: flex;
-  flex-direction: column;
   border-right: 1px solid var(--border-main);
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .panel-right {
@@ -140,13 +138,6 @@ html, body {
   overflow-y: auto;
 }
 
-.panel-section--editor {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding-bottom: 0;
-}
 
 .panel-heading {
   font-size: 13px;
@@ -155,4 +146,12 @@ html, body {
   letter-spacing: 0.5px;
   color: var(--accent);
   margin-bottom: 10px;
+}
+
+.accordion .panel-heading {
+  margin-bottom: 0;
+}
+
+.accordion.open .panel-heading {
+  margin-bottom: 8px;
 }
