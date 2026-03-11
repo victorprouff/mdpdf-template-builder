@@ -131,7 +131,44 @@ html, body {
   flex: 1;
   background: var(--bg-surface);
   overflow: hidden;
-  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-main);
+  background: var(--bg-panel);
+}
+
+.orientation-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-orientation {
+  padding: 3px 10px;
+  font-size: 12px;
+  border: 1px solid var(--border-input);
+  border-radius: 4px;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-orientation:hover {
+  background: var(--bg-input-hover);
+  color: var(--text-primary);
+}
+
+.btn-orientation.active {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
 }
 
 .panel-section {

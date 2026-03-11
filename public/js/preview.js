@@ -4,10 +4,18 @@
 const Preview = (() => {
   const container = document.getElementById('preview-container');
   const iframe = document.getElementById('preview-iframe');
+  let orientation = 'portrait';
 
   function load(templateName) {
-    iframe.src = `/api/preview/${encodeURIComponent(templateName)}`;
+    iframe.src = `/api/preview/${encodeURIComponent(templateName)}?orientation=${orientation}`;
     iframe.onload = () => scaleToFit();
+  }
+
+  function setOrientation(o) {
+    orientation = o;
+    const [w, h] = o === 'landscape' ? [1123, 794] : [794, 1123];
+    iframe.style.width = `${w}px`;
+    iframe.style.height = `${h}px`;
   }
 
   /**
@@ -34,8 +42,8 @@ const Preview = (() => {
   function scaleToFit() {
     const cw = container.clientWidth;
     const ch = container.clientHeight;
-    const pageW = 794;
-    const pageH = 1123;
+    const pageW = orientation === 'landscape' ? 1123 : 794;
+    const pageH = orientation === 'landscape' ? 794 : 1123;
     const scale = Math.min(cw / pageW, ch / pageH, 1);
     const scaledW = pageW * scale;
     const scaledH = pageH * scale;
@@ -46,5 +54,5 @@ const Preview = (() => {
 
   window.addEventListener('resize', scaleToFit);
 
-  return { load, updateCss, scaleToFit };
+  return { load, updateCss, scaleToFit, setOrientation };
 })();

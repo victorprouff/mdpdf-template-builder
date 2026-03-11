@@ -154,6 +154,21 @@
     }
   });
 
+  // ── Orientation buttons ──
+  document.getElementById('btn-portrait').addEventListener('click', () => {
+    Preview.setOrientation('portrait');
+    document.getElementById('btn-portrait').classList.add('active');
+    document.getElementById('btn-landscape').classList.remove('active');
+    Preview.load(currentName);
+  });
+
+  document.getElementById('btn-landscape').addEventListener('click', () => {
+    Preview.setOrientation('landscape');
+    document.getElementById('btn-landscape').classList.add('active');
+    document.getElementById('btn-portrait').classList.remove('active');
+    Preview.load(currentName);
+  });
+
   // ── New template button ──
   document.getElementById('btn-new-template').addEventListener('click', async () => {
     const name = prompt('Nom du nouveau template :');

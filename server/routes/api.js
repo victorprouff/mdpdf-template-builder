@@ -113,6 +113,10 @@ router.get('/preview/:name', (req, res) => {
     return res.status(404).send('Template not found');
   }
 
+  const landscape = req.query.orientation === 'landscape';
+  const pageW = landscape ? 1123 : 794;
+  const pageH = landscape ? 794 : 1123;
+
   const bodyHtml = renderMarkdown(sampleMd);
   const date = new Date().toLocaleDateString('fr-FR', {
     day: 'numeric', month: 'long', year: 'numeric'
@@ -138,10 +142,10 @@ ${getHighlightCss()}
 * { margin: 0; padding: 0; box-sizing: border-box; }
 ul, ol { padding-left: 1.5em; }
 ul ul, ul ol, ol ul, ol ol { padding-left: 1.5em; }
-html, body { width: 794px; height: 1123px; overflow: hidden; }
+html, body { width: ${pageW}px; height: ${pageH}px; overflow: hidden; }
 .page {
-  width: 794px;
-  height: 1123px;
+  width: ${pageW}px;
+  height: ${pageH}px;
   position: relative;
   background: white;
   display: flex;
