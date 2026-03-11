@@ -9,6 +9,14 @@ const { renderMarkdown } = require('../services/markdown-service');
 const sampleMdPath = path.join(__dirname, '..', '..', 'data', 'sample.md');
 const sampleMd = fs.readFileSync(sampleMdPath, 'utf-8');
 
+function getMarkdownForTemplate(name) {
+  const templateMdPath = path.join(templateService.getTemplatePath(name), 'sample.md');
+  if (fs.existsSync(templateMdPath)) {
+    return fs.readFileSync(templateMdPath, 'utf-8');
+  }
+  return sampleMd;
+}
+
 // List available templates
 router.get('/templates', (req, res) => {
   res.json(templateService.listTemplates());
@@ -117,7 +125,7 @@ router.get('/preview/:name', (req, res) => {
   const pageW = landscape ? 1123 : 794;
   const pageH = landscape ? 794 : 1123;
 
-  const bodyHtml = renderMarkdown(sampleMd);
+  const bodyHtml = renderMarkdown(getMarkdownForTemplate(req.params.name));
   const date = new Date().toLocaleDateString('fr-FR', {
     day: 'numeric', month: 'long', year: 'numeric'
   });
