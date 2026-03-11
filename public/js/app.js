@@ -58,6 +58,15 @@
     scheduleSave();
   });
 
+  // ── Table options change (full width, cell height) ──
+  TextControls.setOnTableOptionsChange(({ fullWidth, cellHeight, cellHeightUnit }) => {
+    const newCss = applyTableOptionsChange(currentCss, { fullWidth, cellHeight, cellHeightUnit });
+    currentCss = newCss;
+    CssEditor.setValue(newCss);
+    Preview.updateCss(newCss);
+    scheduleSave();
+  });
+
   // ── Controls change -> update CSS text + preview + editor ──
   Controls.setOnChange((heading, prop, value, state) => {
     const newCss = applyControlChange(currentCss, heading, prop, value, state);
@@ -558,6 +567,29 @@
     } else {
       css = updateCssProp(css, key, 'font-size', `var(${varName})`);
     }
+    return css;
+  }
+
+  /**
+   * Apply table options (full width, cell padding top/bottom) to the CSS.
+   */
+  function applyTableOptionsChange(css, { fullWidth, cellHeight, cellHeightUnit }) {
+    if (fullWidth) {
+      css = setOrCreateCssVar(css, '--table-width', '100%');
+      css = updateCssProp(css, 'table', 'width', 'var(--table-width)');
+    } else {
+      css = removeCssVar(css, '--table-width');
+      css = removeCssProp(css, 'table', 'width');
+    }
+
+    if (cellHeight) {
+      css = setOrCreateCssVar(css, '--td-height', `${cellHeight}${cellHeightUnit}`);
+      css = updateCssProp(css, 'td', 'height', 'var(--td-height)');
+    } else {
+      css = removeCssVar(css, '--td-height');
+      css = removeCssProp(css, 'td', 'height');
+    }
+
     return css;
   }
 

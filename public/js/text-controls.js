@@ -5,10 +5,15 @@
 const TextControls = (() => {
   const container = document.getElementById('text-controls');
   let onChange = null;
+  let onTableOptionsChange = null;
   const state = {
     p:  { fontSize: '', fontSizeUnit: 'pt' },
     td: { fontSize: '', fontSizeUnit: 'pt' },
     li: { fontSize: '', fontSizeUnit: 'pt' },
+  };
+  const tableState = {
+    fullWidth: false,
+    cellHeight: '', cellHeightUnit: 'px',
   };
 
   const ELEMENTS = [
@@ -21,6 +26,9 @@ const TextControls = (() => {
     ELEMENTS.forEach(({ key, label }) => {
       container.appendChild(createGroup(key, label));
     });
+    // Append table-specific options (full width + cell padding) to the td group
+    const tdGroup = container.querySelector('[data-element="td"]');
+    if (tdGroup) tdGroup.appendChild(createTableOptions());
   }
 
   function createGroup(key, label) {
@@ -65,7 +73,8 @@ const TextControls = (() => {
   }
 
   /**
-   * Sync controls from CSS text: reads --p-font-size, --td-font-size, --li-font-size from :root.
+   * Sync controls from CSS text: reads --p-font-size, --td-font-size, --li-font-size,
+   * --table-width, --td-padding-top, --td-padding-bottom from :root.
    */
   function setFromCss(css) {
     const vars = parseCssVars(css);
@@ -82,6 +91,19 @@ const TextControls = (() => {
       }
       syncGroupUI(key);
     });
+
+    // Table options
+    tableState.fullWidth = !!vars['--table-width'];
+
+    const ch = vars['--td-height'];
+    if (ch) {
+      const parsed = ch.match(/^([\d.]+)\s*(px|pt|em)$/);
+      if (parsed) { tableState.cellHeight = parsed[1]; tableState.cellHeightUnit = parsed[2]; }
+    } else {
+      tableState.cellHeight = '';
+    }
+
+    syncTableUI();
   }
 
   function syncGroupUI(key) {
@@ -94,8 +116,78 @@ const TextControls = (() => {
     if (unitSelect) unitSelect.value = state[key].fontSizeUnit;
   }
 
+  function createTableOptions() {
+    const div = document.createElement('div');
+
+    // Full width checkbox
+    const fullWidthRow = document.createElement('div');
+    fullWidthRow.className = 'heading-row';
+    fullWidthRow.style.alignItems = 'center';
+
+    const fullWidthCb = document.createElement('input');
+    fullWidthCb.type = 'checkbox';
+    fullWidthCb.id = 'table-full-width-checkbox';
+    fullWidthCb.addEventListener('change', () => {
+      tableState.fullWidth = fullWidthCb.checked;
+      fireTableOptionsChange();
+    });
+
+    const fullWidthLabel = el('label', 'Pleine largeur');
+    fullWidthLabel.htmlFor = 'table-full-width-checkbox';
+    fullWidthRow.append(fullWidthCb, fullWidthLabel);
+
+    // Cell height
+    const heightRow = document.createElement('div');
+    heightRow.className = 'heading-row';
+
+    const heightLabel = el('label', 'Hauteur cellules');
+
+    const heightInput = el('input');
+    heightInput.type = 'number';
+    heightInput.id = 'td-height-input';
+    heightInput.min = '0';
+    heightInput.max = '500';
+    heightInput.addEventListener('input', () => {
+      tableState.cellHeight = heightInput.value;
+      fireTableOptionsChange();
+    });
+
+    const heightUnit = el('select');
+    heightUnit.id = 'td-height-unit';
+    ['px', 'pt', 'em'].forEach(u => {
+      const o = el('option'); o.value = u; o.textContent = u;
+      heightUnit.appendChild(o);
+    });
+    heightUnit.addEventListener('change', () => {
+      tableState.cellHeightUnit = heightUnit.value;
+      if (tableState.cellHeight) fireTableOptionsChange();
+    });
+
+    heightRow.append(heightLabel, heightInput, heightUnit);
+    div.append(fullWidthRow, heightRow);
+    return div;
+  }
+
+  function syncTableUI() {
+    const fullWidthCb = document.getElementById('table-full-width-checkbox');
+    if (fullWidthCb) fullWidthCb.checked = tableState.fullWidth;
+
+    const hInput = document.getElementById('td-height-input');
+    const hUnit  = document.getElementById('td-height-unit');
+    if (hInput) hInput.value = tableState.cellHeight;
+    if (hUnit)  hUnit.value  = tableState.cellHeightUnit;
+  }
+
+  function fireTableOptionsChange() {
+    if (onTableOptionsChange) onTableOptionsChange({ ...tableState });
+  }
+
   function setOnChange(fn) {
     onChange = fn;
+  }
+
+  function setOnTableOptionsChange(fn) {
+    onTableOptionsChange = fn;
   }
 
   function parseCssVars(css) {
@@ -117,5 +209,5 @@ const TextControls = (() => {
     return e;
   }
 
-  return { init, setFromCss, setOnChange };
+  return { init, setFromCss, setOnChange, setOnTableOptionsChange };
 })();
