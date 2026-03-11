@@ -12,7 +12,7 @@ app.use('/api', apiRoutes);
 
 websocket.init(server);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3300;
 server.listen(PORT, () => {
   console.log(`mdpdf-template-builder running at http://localhost:${PORT}`);
 });

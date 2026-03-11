@@ -45,6 +45,7 @@
     Margins.setFromCss(css);
     HeaderFooter.setPaddings(parseAreaPaddings(css));
     HeaderFooter.setHeaderOptions(parseHeaderOptions(css));
+    HeaderFooter.setFooterOptions(parseFooterOptions(css));
     scheduleSave();
   });
 
@@ -92,15 +93,28 @@
     Preview.load(currentName);
   });
 
-  // ── Header options (logo height, show date) change ──
-  HeaderFooter.setOnHeaderOptionsChange(async ({ logoHeight, showDate }) => {
+  // ── Header options (logo height, show date, show header, show logo) change ──
+  HeaderFooter.setOnHeaderOptionsChange(async ({ logoHeight, showDate, showHeader, showLogo }) => {
     let css = currentCss;
     css = setOrCreateCssVar(css, '--logo-height', logoHeight);
     css = setOrCreateCssVar(css, '--show-date', showDate ? '1' : '0');
+    css = setOrCreateCssVar(css, '--show-header', showHeader !== false ? '1' : '0');
+    css = setOrCreateCssVar(css, '--show-logo', showLogo !== false ? '1' : '0');
     currentCss = css;
     CssEditor.setValue(css);
     await saveCss();
-    await saveHeaderOptions(logoHeight, showDate);
+    await saveHeaderOptions(logoHeight, showDate, showHeader, showLogo);
+    Preview.load(currentName);
+  });
+
+  // ── Footer options (show footer) change ──
+  HeaderFooter.setOnFooterOptionsChange(async ({ showFooter }) => {
+    let css = currentCss;
+    css = setOrCreateCssVar(css, '--show-footer', showFooter ? '1' : '0');
+    currentCss = css;
+    CssEditor.setValue(css);
+    await saveCss();
+    await saveFooterOptions(showFooter);
     Preview.load(currentName);
   });
 
@@ -121,6 +135,7 @@
       Margins.setFromCss(msg.css);
       HeaderFooter.setPaddings(parseAreaPaddings(msg.css));
       HeaderFooter.setHeaderOptions(parseHeaderOptions(msg.css));
+      HeaderFooter.setFooterOptions(parseFooterOptions(msg.css));
     }
   });
 
@@ -199,6 +214,7 @@
     HeaderFooter.setData({ logo: tpl.logo, footerText: extractFooterText(tpl.footer) });
     HeaderFooter.setPaddings(parseAreaPaddings(currentCss));
     HeaderFooter.setHeaderOptions(parseHeaderOptions(currentCss));
+    HeaderFooter.setFooterOptions(parseFooterOptions(currentCss));
     if (currentCss !== tpl.css) {
       scheduleSave();
     }
@@ -250,25 +266,49 @@
   }
 
   /**
-   * Parse logo height and show-date from CSS variables.
+   * Parse logo height, show-date, show-header, show-logo from CSS variables.
    */
   function parseHeaderOptions(css) {
     const vars = parseCssVars(css);
     return {
       logoHeight: vars['--logo-height'] || '60px',
-      showDate: vars['--show-date'] !== '0'
+      showDate: vars['--show-date'] !== '0',
+      showHeader: vars['--show-header'] !== '0',
+      showLogo: vars['--show-logo'] !== '0'
     };
   }
 
-  async function saveHeaderOptions(logoHeight, showDate) {
+  /**
+   * Parse show-footer from CSS variables.
+   */
+  function parseFooterOptions(css) {
+    const vars = parseCssVars(css);
+    return {
+      showFooter: vars['--show-footer'] !== '0'
+    };
+  }
+
+  async function saveHeaderOptions(logoHeight, showDate, showHeader, showLogo) {
     try {
       await fetch(`/api/templates/${encodeURIComponent(currentName)}/header-options`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ logoHeight, showDate })
+        body: JSON.stringify({ logoHeight, showDate, showHeader, showLogo })
       });
     } catch {
       saveStatus.textContent = 'Erreur header options';
+    }
+  }
+
+  async function saveFooterOptions(showFooter) {
+    try {
+      await fetch(`/api/templates/${encodeURIComponent(currentName)}/footer-options`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ showFooter })
+      });
+    } catch {
+      saveStatus.textContent = 'Erreur footer options';
     }
   }
 

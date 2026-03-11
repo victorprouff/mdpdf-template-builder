@@ -8,6 +8,7 @@ const HeaderFooter = (() => {
   let onFooterChange = null;
   let onPaddingChange = null;
   let onHeaderOptionsChange = null;
+  let onFooterOptionsChange = null;
   let debounceTimer = null;
   let headerOptionsTimer = null;
   const SIDES = ['top', 'right', 'bottom', 'left'];
@@ -54,9 +55,21 @@ const HeaderFooter = (() => {
     if (!onHeaderOptionsChange) return;
     const heightInput = document.getElementById('logo-height-input');
     const dateCheckbox = document.getElementById('show-date-checkbox');
+    const headerCheckbox = document.getElementById('show-header-checkbox');
+    const logoCheckbox = document.getElementById('show-logo-checkbox');
     onHeaderOptionsChange({
       logoHeight: heightInput ? `${heightInput.value}px` : '60px',
-      showDate: dateCheckbox ? dateCheckbox.checked : true
+      showDate: dateCheckbox ? dateCheckbox.checked : true,
+      showHeader: headerCheckbox ? headerCheckbox.checked : true,
+      showLogo: logoCheckbox ? logoCheckbox.checked : true
+    });
+  }
+
+  function fireFooterOptionsChange() {
+    if (!onFooterOptionsChange) return;
+    const footerCheckbox = document.getElementById('show-footer-checkbox');
+    onFooterOptionsChange({
+      showFooter: footerCheckbox ? footerCheckbox.checked : true
     });
   }
 
@@ -72,6 +85,24 @@ const HeaderFooter = (() => {
   }
 
   function init() {
+    // Show header checkbox
+    const showHeaderRow = document.createElement('div');
+    showHeaderRow.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 10px;';
+
+    const showHeaderCheckbox = document.createElement('input');
+    showHeaderCheckbox.type = 'checkbox';
+    showHeaderCheckbox.id = 'show-header-checkbox';
+    showHeaderCheckbox.checked = true;
+    showHeaderCheckbox.addEventListener('change', () => fireHeaderOptionsChange());
+
+    const showHeaderLabel = document.createElement('label');
+    showHeaderLabel.textContent = 'Afficher le header';
+    showHeaderLabel.style.fontSize = '12px';
+    showHeaderLabel.htmlFor = 'show-header-checkbox';
+
+    showHeaderRow.append(showHeaderCheckbox, showHeaderLabel);
+    headerContainer.append(showHeaderRow);
+
     // Logo section → header container
     const logoSection = document.createElement('div');
     logoSection.className = 'logo-section';
@@ -168,11 +199,46 @@ const HeaderFooter = (() => {
 
     dateRow.append(dateCheckbox, dateLabel);
 
-    logoSection.append(logoLabel, logoRow, heightRow, dateRow);
+    // Show logo checkbox
+    const showLogoRow = document.createElement('div');
+    showLogoRow.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-top: 8px;';
+
+    const showLogoCheckbox = document.createElement('input');
+    showLogoCheckbox.type = 'checkbox';
+    showLogoCheckbox.id = 'show-logo-checkbox';
+    showLogoCheckbox.checked = true;
+    showLogoCheckbox.addEventListener('change', () => fireHeaderOptionsChange());
+
+    const showLogoLabel = document.createElement('label');
+    showLogoLabel.textContent = 'Afficher le logo';
+    showLogoLabel.style.fontSize = '12px';
+    showLogoLabel.htmlFor = 'show-logo-checkbox';
+
+    showLogoRow.append(showLogoCheckbox, showLogoLabel);
+
+    logoSection.append(logoLabel, logoRow, heightRow, dateRow, showLogoRow);
     headerContainer.append(logoSection);
 
     // Padding controls for header
     createPaddingGrid('header', headerContainer);
+
+    // Show footer checkbox
+    const showFooterRow = document.createElement('div');
+    showFooterRow.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 10px;';
+
+    const showFooterCheckbox = document.createElement('input');
+    showFooterCheckbox.type = 'checkbox';
+    showFooterCheckbox.id = 'show-footer-checkbox';
+    showFooterCheckbox.checked = true;
+    showFooterCheckbox.addEventListener('change', () => fireFooterOptionsChange());
+
+    const showFooterLabel = document.createElement('label');
+    showFooterLabel.textContent = 'Afficher le footer';
+    showFooterLabel.style.fontSize = '12px';
+    showFooterLabel.htmlFor = 'show-footer-checkbox';
+
+    showFooterRow.append(showFooterCheckbox, showFooterLabel);
+    footerContainer.append(showFooterRow);
 
     // Footer section → footer container
     const footerSection = document.createElement('div');
@@ -235,17 +301,27 @@ const HeaderFooter = (() => {
     });
   }
 
-  function setHeaderOptions({ logoHeight, showDate }) {
+  function setHeaderOptions({ logoHeight, showDate, showHeader, showLogo }) {
     const heightInput = document.getElementById('logo-height-input');
     const dateCheckbox = document.getElementById('show-date-checkbox');
+    const headerCheckbox = document.getElementById('show-header-checkbox');
+    const logoCheckbox = document.getElementById('show-logo-checkbox');
     if (heightInput) heightInput.value = parseInt(logoHeight) || 60;
-    if (dateCheckbox) dateCheckbox.checked = showDate;
+    if (dateCheckbox) dateCheckbox.checked = showDate !== false;
+    if (headerCheckbox) headerCheckbox.checked = showHeader !== false;
+    if (logoCheckbox) logoCheckbox.checked = showLogo !== false;
+  }
+
+  function setFooterOptions({ showFooter }) {
+    const footerCheckbox = document.getElementById('show-footer-checkbox');
+    if (footerCheckbox) footerCheckbox.checked = showFooter !== false;
   }
 
   function setOnLogoChange(fn) { onLogoChange = fn; }
   function setOnFooterChange(fn) { onFooterChange = fn; }
   function setOnPaddingChange(fn) { onPaddingChange = fn; }
   function setOnHeaderOptionsChange(fn) { onHeaderOptionsChange = fn; }
+  function setOnFooterOptionsChange(fn) { onFooterOptionsChange = fn; }
 
-  return { init, setData, setPaddings, setHeaderOptions, setOnLogoChange, setOnFooterChange, setOnPaddingChange, setOnHeaderOptionsChange };
+  return { init, setData, setPaddings, setHeaderOptions, setFooterOptions, setOnLogoChange, setOnFooterChange, setOnPaddingChange, setOnHeaderOptionsChange, setOnFooterOptionsChange };
 })();

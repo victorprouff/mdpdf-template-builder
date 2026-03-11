@@ -115,10 +115,24 @@ function saveFooter(name, text) {
   if (!fs.existsSync(dir)) {
     throw new Error(`Template "${name}" not found`);
   }
+  const footerPath = path.join(dir, 'footer.html');
+
+  // Preserve current visibility setting
+  let hidden = false;
+  if (fs.existsSync(footerPath)) {
+    const existing = fs.readFileSync(footerPath, 'utf-8');
+    hidden = /(<div\b[^>]*style=")display\s*:\s*none;/.test(existing);
+  }
+
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const inner = lines.join(' <br>\n    ');
-  const html = `<div style="width: 100%; text-align: center; font-size: 9px; color: #666; line-height: 1.4;">\n    ${inner}\n</div>\n`;
-  fs.writeFileSync(path.join(dir, 'footer.html'), html, 'utf-8');
+  let html = `<div style="width: 100%; text-align: center; font-size: 9px; color: #666; line-height: 1.4;">\n    ${inner}\n</div>\n`;
+
+  if (hidden) {
+    html = html.replace(/(<div\b[^>]*style=")/, '$1display: none; ');
+  }
+
+  fs.writeFileSync(footerPath, html, 'utf-8');
 }
 
 function savePadding(name, area, paddings) {
@@ -144,7 +158,7 @@ function savePadding(name, area, paddings) {
   fs.writeFileSync(filePath, html, 'utf-8');
 }
 
-function saveHeaderOptions(name, { logoHeight, showDate }) {
+function saveHeaderOptions(name, { logoHeight, showDate, showHeader = true, showLogo = true }) {
   const dir = getTemplatePath(name);
   if (!fs.existsSync(dir)) {
     throw new Error(`Template "${name}" not found`);
@@ -160,18 +174,53 @@ function saveHeaderOptions(name, { logoHeight, showDate }) {
     html = html.replace(/height\s*:\s*[\d]+px/, `height: ${parseInt(heightVal)}px`);
   }
 
+  // Update logo visibility: use visibility: hidden (keeps space) so date stays aligned
+  html = html.replace(/(<img\b[^>]*style="[^"]*?)visibility\s*:\s*(?:visible|hidden);\s*/g, '$1');
+  if (showLogo === false) {
+    html = html.replace(/(<img\b[^>]*style=")/, `$1visibility: hidden; `);
+  }
+
   // Update date visibility on the span containing {{DATE}}
-  // First, remove any existing display: none from the date span
   html = html.replace(
     /(<span\s+style=")display\s*:\s*none;\s*([^"]*"[^>]*>\s*\{\{DATE\}\})/,
     '$1$2'
   );
-  // Then add display: none if date should be hidden
   if (showDate === false) {
     html = html.replace(
       /(<span\s+style=")((?:(?!display\s*:\s*none)[^"])*"[^>]*>\s*\{\{DATE\}\})/,
       '$1display: none; $2'
     );
+  }
+
+  // Update header visibility: toggle display: flex <-> display: none on outer div
+  const newHeaderDisplay = showHeader === false ? 'none' : 'flex';
+  if (/(<div\b[^>]*style="[^"]*?)display\s*:\s*(?:flex|none)/.test(html)) {
+    html = html.replace(
+      /(<div\b[^>]*style="[^"]*?)display\s*:\s*(?:flex|none)/,
+      `$1display: ${newHeaderDisplay}`
+    );
+  } else if (showHeader === false) {
+    html = html.replace(/(<div\b[^>]*style=")/, `$1display: none; `);
+  }
+
+  fs.writeFileSync(filePath, html, 'utf-8');
+}
+
+function saveFooterOptions(name, { showFooter = true }) {
+  const dir = getTemplatePath(name);
+  if (!fs.existsSync(dir)) {
+    throw new Error(`Template "${name}" not found`);
+  }
+  const filePath = path.join(dir, 'footer.html');
+  if (!fs.existsSync(filePath)) return;
+
+  let html = fs.readFileSync(filePath, 'utf-8');
+
+  // Remove existing display: none if previously added
+  html = html.replace(/(<div\b[^>]*style=")display\s*:\s*none;\s*/, '$1');
+
+  if (showFooter === false) {
+    html = html.replace(/(<div\b[^>]*style=")/, '$1display: none; ');
   }
 
   fs.writeFileSync(filePath, html, 'utf-8');
@@ -190,4 +239,4 @@ function saveLogo(name, dataUri) {
   fs.writeFileSync(path.join(dir, 'logo.png'), buffer);
 }
 
-module.exports = { listTemplates, loadTemplate, saveCss, getTemplatePath, TEMPLATES_DIR, createTemplate, saveFooter, saveLogo, savePadding, saveHeaderOptions };
+module.exports = { listTemplates, loadTemplate, saveCss, getTemplatePath, TEMPLATES_DIR, createTemplate, saveFooter, saveLogo, savePadding, saveHeaderOptions, saveFooterOptions };

@@ -66,13 +66,28 @@ router.put('/templates/:name/padding', express.json(), (req, res) => {
   }
 });
 
-// Save header options (logo height, show date)
+// Save header options (logo height, show date, show header, show logo)
 router.put('/templates/:name/header-options', express.json(), (req, res) => {
   try {
     markSelfWrite();
     templateService.saveHeaderOptions(req.params.name, {
       logoHeight: req.body.logoHeight,
-      showDate: req.body.showDate
+      showDate: req.body.showDate,
+      showHeader: req.body.showHeader,
+      showLogo: req.body.showLogo
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Save footer options (show/hide)
+router.put('/templates/:name/footer-options', express.json(), (req, res) => {
+  try {
+    markSelfWrite();
+    templateService.saveFooterOptions(req.params.name, {
+      showFooter: req.body.showFooter
     });
     res.json({ ok: true });
   } catch (err) {
