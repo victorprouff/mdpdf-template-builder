@@ -6,6 +6,7 @@ const TextControls = (() => {
   const container = document.getElementById('text-controls');
   let onChange = null;
   let onTableOptionsChange = null;
+  let onListOptionsChange = null;
   const state = {
     p:  { fontSize: '', fontSizeUnit: 'pt' },
     td: { fontSize: '', fontSizeUnit: 'pt' },
@@ -14,6 +15,11 @@ const TextControls = (() => {
   const tableState = {
     fullWidth: false,
     cellHeight: '', cellHeightUnit: 'px',
+    borderWidth: '', borderWidthUnit: 'px',
+  };
+  const listState = {
+    marginTop: '', marginTopUnit: 'px',
+    preMargin: '', preMarginUnit: 'px',
   };
 
   const ELEMENTS = [
@@ -29,6 +35,9 @@ const TextControls = (() => {
     // Append table-specific options (full width + cell padding) to the td group
     const tdGroup = container.querySelector('[data-element="td"]');
     if (tdGroup) tdGroup.appendChild(createTableOptions());
+    // Append list-specific options to the li group
+    const liGroup = container.querySelector('[data-element="li"]');
+    if (liGroup) liGroup.appendChild(createListOptions());
   }
 
   function createGroup(key, label) {
@@ -103,7 +112,33 @@ const TextControls = (() => {
       tableState.cellHeight = '';
     }
 
+    const bw = vars['--table-border-width'];
+    if (bw) {
+      const parsed = bw.match(/^([\d.]+)\s*(px|pt)$/);
+      if (parsed) { tableState.borderWidth = parsed[1]; tableState.borderWidthUnit = parsed[2]; }
+    } else {
+      tableState.borderWidth = '';
+    }
+
     syncTableUI();
+
+    // List options
+    const lmt = vars['--list-margin-top'];
+    if (lmt) {
+      const parsed = lmt.match(/^([\d.]+)\s*(px|pt|em)$/);
+      if (parsed) { listState.marginTop = parsed[1]; listState.marginTopUnit = parsed[2]; }
+    } else {
+      listState.marginTop = '';
+    }
+
+    const plm = vars['--pre-list-margin'];
+    if (plm) {
+      const parsed = plm.match(/^([\d.]+)\s*(px|pt|em)$/);
+      if (parsed) { listState.preMargin = parsed[1]; listState.preMarginUnit = parsed[2]; }
+    } else {
+      listState.preMargin = '';
+    }
+    syncListUI();
   }
 
   function syncGroupUI(key) {
@@ -164,7 +199,37 @@ const TextControls = (() => {
     });
 
     heightRow.append(heightLabel, heightInput, heightUnit);
-    div.append(fullWidthRow, heightRow);
+
+    // Border width
+    const borderRow = document.createElement('div');
+    borderRow.className = 'heading-row';
+
+    const borderLabel = el('label', 'Bordure');
+
+    const borderInput = el('input');
+    borderInput.type = 'number';
+    borderInput.id = 'td-border-width-input';
+    borderInput.min = '0';
+    borderInput.max = '20';
+    borderInput.placeholder = '—';
+    borderInput.addEventListener('input', () => {
+      tableState.borderWidth = borderInput.value;
+      fireTableOptionsChange();
+    });
+
+    const borderUnit = el('select');
+    borderUnit.id = 'td-border-width-unit';
+    ['px', 'pt'].forEach(u => {
+      const o = el('option'); o.value = u; o.textContent = u;
+      borderUnit.appendChild(o);
+    });
+    borderUnit.addEventListener('change', () => {
+      tableState.borderWidthUnit = borderUnit.value;
+      if (tableState.borderWidth) fireTableOptionsChange();
+    });
+
+    borderRow.append(borderLabel, borderInput, borderUnit);
+    div.append(fullWidthRow, heightRow, borderRow);
     return div;
   }
 
@@ -176,10 +241,107 @@ const TextControls = (() => {
     const hUnit  = document.getElementById('td-height-unit');
     if (hInput) hInput.value = tableState.cellHeight;
     if (hUnit)  hUnit.value  = tableState.cellHeightUnit;
+
+    const bInput = document.getElementById('td-border-width-input');
+    const bUnit  = document.getElementById('td-border-width-unit');
+    if (bInput) bInput.value = tableState.borderWidth;
+    if (bUnit)  bUnit.value  = tableState.borderWidthUnit;
+  }
+
+  function createListOptions() {
+    const div = document.createElement('div');
+
+    const marginTopRow = document.createElement('div');
+    marginTopRow.className = 'heading-row';
+
+    const marginTopLabel = el('label', 'Espacement avant');
+
+    const marginTopInput = el('input');
+    marginTopInput.type = 'number';
+    marginTopInput.id = 'list-margin-top-input';
+    marginTopInput.min = '0';
+    marginTopInput.max = '200';
+    marginTopInput.placeholder = '—';
+    marginTopInput.addEventListener('input', () => {
+      listState.marginTop = marginTopInput.value;
+      fireListOptionsChange();
+    });
+
+    const marginTopUnit = el('select');
+    marginTopUnit.id = 'list-margin-top-unit';
+    ['px', 'pt', 'em'].forEach(u => {
+      const o = el('option'); o.value = u; o.textContent = u;
+      marginTopUnit.appendChild(o);
+    });
+    marginTopUnit.addEventListener('change', () => {
+      listState.marginTopUnit = marginTopUnit.value;
+      if (listState.marginTop) fireListOptionsChange();
+    });
+
+    marginTopRow.append(marginTopLabel, marginTopInput, marginTopUnit);
+
+    // Margin-bottom of preceding element (p:has(+ ul/ol))
+    const preMarginRow = document.createElement('div');
+    preMarginRow.className = 'heading-row';
+
+    const preMarginLabel = el('label', 'Marge élément précédent');
+
+    const preMarginInput = el('input');
+    preMarginInput.type = 'number';
+    preMarginInput.id = 'pre-list-margin-input';
+    preMarginInput.min = '0';
+    preMarginInput.max = '200';
+    preMarginInput.placeholder = '—';
+    preMarginInput.addEventListener('input', () => {
+      listState.preMargin = preMarginInput.value;
+      fireListOptionsChange();
+    });
+
+    const preMarginUnit = el('select');
+    preMarginUnit.id = 'pre-list-margin-unit';
+    ['px', 'pt', 'em'].forEach(u => {
+      const o = el('option'); o.value = u; o.textContent = u;
+      preMarginUnit.appendChild(o);
+    });
+    preMarginUnit.addEventListener('change', () => {
+      listState.preMarginUnit = preMarginUnit.value;
+      if (listState.preMargin) fireListOptionsChange();
+    });
+
+    preMarginRow.append(preMarginLabel, preMarginInput, preMarginUnit);
+    div.append(marginTopRow, preMarginRow);
+    return div;
+  }
+
+  function syncListUI() {
+    const mtInput = document.getElementById('list-margin-top-input');
+    const mtUnit  = document.getElementById('list-margin-top-unit');
+    if (mtInput) mtInput.value = listState.marginTop;
+    if (mtUnit)  mtUnit.value  = listState.marginTopUnit;
+
+    const pmInput = document.getElementById('pre-list-margin-input');
+    const pmUnit  = document.getElementById('pre-list-margin-unit');
+    if (pmInput) pmInput.value = listState.preMargin;
+    if (pmUnit)  pmUnit.value  = listState.preMarginUnit;
+  }
+
+  function fireListOptionsChange() {
+    if (onListOptionsChange) onListOptionsChange({
+      marginTop: listState.marginTop,
+      marginTopUnit: listState.marginTopUnit,
+      preMargin: listState.preMargin,
+      preMarginUnit: listState.preMarginUnit,
+    });
   }
 
   function fireTableOptionsChange() {
-    if (onTableOptionsChange) onTableOptionsChange({ ...tableState });
+    if (onTableOptionsChange) onTableOptionsChange({
+      fullWidth: tableState.fullWidth,
+      cellHeight: tableState.cellHeight,
+      cellHeightUnit: tableState.cellHeightUnit,
+      borderWidth: tableState.borderWidth,
+      borderWidthUnit: tableState.borderWidthUnit,
+    });
   }
 
   function setOnChange(fn) {
@@ -188,6 +350,10 @@ const TextControls = (() => {
 
   function setOnTableOptionsChange(fn) {
     onTableOptionsChange = fn;
+  }
+
+  function setOnListOptionsChange(fn) {
+    onListOptionsChange = fn;
   }
 
   function parseCssVars(css) {
@@ -209,5 +375,5 @@ const TextControls = (() => {
     return e;
   }
 
-  return { init, setFromCss, setOnChange, setOnTableOptionsChange };
+  return { init, setFromCss, setOnChange, setOnTableOptionsChange, setOnListOptionsChange };
 })();

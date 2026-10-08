@@ -59,8 +59,17 @@
   });
 
   // ── Table options change (full width, cell height) ──
-  TextControls.setOnTableOptionsChange(({ fullWidth, cellHeight, cellHeightUnit }) => {
-    const newCss = applyTableOptionsChange(currentCss, { fullWidth, cellHeight, cellHeightUnit });
+  TextControls.setOnTableOptionsChange(({ fullWidth, cellHeight, cellHeightUnit, borderWidth, borderWidthUnit }) => {
+    const newCss = applyTableOptionsChange(currentCss, { fullWidth, cellHeight, cellHeightUnit, borderWidth, borderWidthUnit });
+    currentCss = newCss;
+    CssEditor.setValue(newCss);
+    Preview.updateCss(newCss);
+    scheduleSave();
+  });
+
+  // ── List options change (margin-top, pre-list margin) ──
+  TextControls.setOnListOptionsChange(({ marginTop, marginTopUnit, preMargin, preMarginUnit }) => {
+    const newCss = applyListOptionsChange(currentCss, { marginTop, marginTopUnit, preMargin, preMarginUnit });
     currentCss = newCss;
     CssEditor.setValue(newCss);
     Preview.updateCss(newCss);
@@ -436,8 +445,20 @@
         if (key === 'td') {
           css = updateCssProp(css, 'th', 'font-size', `var(${varName})`);
         }
+        // Strip font-size from group selector rules only when adding the variable for the first time
+        css = removePropertyFromGroupSelectors(css, key, 'font-size');
+        if (key === 'td') css = removePropertyFromGroupSelectors(css, 'th', 'font-size');
       }
     }
+
+    // Table border default: inject if no border variable present
+    if (!(/--table-border-width\s*:/.test(css))) {
+      css = setOrCreateCssVar(css, '--table-border-width', '1px');
+      css = updateCssProp(css, 'table', 'border-collapse', 'collapse');
+      css = updateCssProp(css, 'td', 'border', 'var(--table-border-width) solid');
+      css = updateCssProp(css, 'th', 'border', 'var(--table-border-width) solid');
+    }
+
     return css;
   }
 
@@ -575,6 +596,7 @@
    * Apply a text element font-size change to the CSS.
    * Writes --p/td/li-font-size in :root and updates the rule.
    * For 'td', also updates the 'th' rule to share the same variable.
+   * Also strips font-size from any group selector rules that would override.
    */
   function applyTextControlChange(css, key, fontSize, fontSizeUnit) {
     if (!fontSize) return css;
@@ -583,16 +605,93 @@
     if (key === 'td') {
       css = updateCssProp(css, 'td', 'font-size', `var(${varName})`);
       css = updateCssProp(css, 'th', 'font-size', `var(${varName})`);
+      css = removePropertyFromGroupSelectors(css, 'td', 'font-size');
+      css = removePropertyFromGroupSelectors(css, 'th', 'font-size');
     } else {
       css = updateCssProp(css, key, 'font-size', `var(${varName})`);
+      css = removePropertyFromGroupSelectors(css, key, 'font-size');
     }
     return css;
   }
 
   /**
-   * Apply table options (full width, cell padding top/bottom) to the CSS.
+   * Apply list options (margin-top on ul/ol, margin-bottom on preceding element) to the CSS.
    */
-  function applyTableOptionsChange(css, { fullWidth, cellHeight, cellHeightUnit }) {
+  function applyListOptionsChange(css, { marginTop, marginTopUnit, preMargin, preMarginUnit }) {
+    if (marginTop) {
+      css = setOrCreateCssVar(css, '--list-margin-top', `${marginTop}${marginTopUnit}`);
+      css = updateCssProp(css, 'ul', 'margin-top', 'var(--list-margin-top)');
+      css = updateCssProp(css, 'ol', 'margin-top', 'var(--list-margin-top)');
+    } else {
+      css = removeCssVar(css, '--list-margin-top');
+      css = removeCssProp(css, 'ul', 'margin-top');
+      css = removeCssProp(css, 'ol', 'margin-top');
+    }
+
+    const PRE_LIST_SEL = 'p:has(+ ul), p:has(+ ol)';
+    if (preMargin) {
+      css = setOrCreateCssVar(css, '--pre-list-margin', `${preMargin}${preMarginUnit}`);
+      css = setRuleProperty(css, PRE_LIST_SEL, 'margin-bottom', 'var(--pre-list-margin)');
+    } else {
+      css = removeCssVar(css, '--pre-list-margin');
+      css = removeRuleProperty(css, PRE_LIST_SEL, 'margin-bottom');
+    }
+
+    return css;
+  }
+
+  /**
+   * Set or update a CSS property in a rule identified by a literal selector string.
+   * Handles complex selectors (e.g. with :has(), +) that can't be used as regex.
+   */
+  function setRuleProperty(css, selector, property, value) {
+    const idx = findSelectorIndex(css, selector);
+    if (idx === -1) {
+      return css.trimEnd() + `\n\n${selector} {\n    ${property}: ${value};\n}\n`;
+    }
+    const openBrace = css.indexOf('{', idx);
+    const closeBrace = css.indexOf('}', openBrace);
+    const body = css.slice(openBrace + 1, closeBrace);
+    const propEsc = property.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const propRegex = new RegExp(`([ \\t]*${propEsc}\\s*:\\s*)([^;]*)(;)`);
+    const newBody = propRegex.test(body)
+      ? body.replace(propRegex, `$1${value}$3`)
+      : body.trimEnd() + `\n    ${property}: ${value};\n`;
+    return css.slice(0, openBrace + 1) + newBody + css.slice(closeBrace);
+  }
+
+  /**
+   * Remove a CSS property from a rule identified by a literal selector string.
+   * Removes the entire rule if it becomes empty.
+   */
+  function removeRuleProperty(css, selector, property) {
+    const idx = findSelectorIndex(css, selector);
+    if (idx === -1) return css;
+    const openBrace = css.indexOf('{', idx);
+    const closeBrace = css.indexOf('}', openBrace);
+    const body = css.slice(openBrace + 1, closeBrace);
+    const propEsc = property.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const propRegex = new RegExp(`[ \\t]*${propEsc}\\s*:[^;]*;\\n?`);
+    const newBody = body.replace(propRegex, '');
+    if (newBody.trim() === '') {
+      return (css.slice(0, idx) + css.slice(closeBrace + 1)).replace(/\n{3,}/g, '\n\n');
+    }
+    return css.slice(0, openBrace + 1) + newBody + css.slice(closeBrace);
+  }
+
+  /**
+   * Find the start index of a literal selector in CSS text.
+   */
+  function findSelectorIndex(css, selector) {
+    let idx = css.indexOf(selector + ' {');
+    if (idx === -1) idx = css.indexOf(selector + '{');
+    return idx;
+  }
+
+  /**
+   * Apply table options (full width, cell height, border width) to the CSS.
+   */
+  function applyTableOptionsChange(css, { fullWidth, cellHeight, cellHeightUnit, borderWidth, borderWidthUnit }) {
     if (fullWidth) {
       css = setOrCreateCssVar(css, '--table-width', '100%');
       css = updateCssProp(css, 'table', 'width', 'var(--table-width)');
@@ -607,6 +706,18 @@
     } else {
       css = removeCssVar(css, '--td-height');
       css = removeCssProp(css, 'td', 'height');
+    }
+
+    if (borderWidth) {
+      css = setOrCreateCssVar(css, '--table-border-width', `${borderWidth}${borderWidthUnit}`);
+      css = updateCssProp(css, 'table', 'border-collapse', 'collapse');
+      css = updateCssProp(css, 'td', 'border', 'var(--table-border-width) solid');
+      css = updateCssProp(css, 'th', 'border', 'var(--table-border-width) solid');
+    } else {
+      css = removeCssVar(css, '--table-border-width');
+      css = removeCssProp(css, 'table', 'border-collapse');
+      css = removeCssProp(css, 'td', 'border');
+      css = removeCssProp(css, 'th', 'border');
     }
 
     return css;
@@ -690,6 +801,23 @@
         css.substring(match.index + match[0].length);
     }
   }
+  /**
+   * Remove a CSS property from group selector rules (comma-separated selectors)
+   * that include the target selector. Prevents group rules from overriding
+   * individual variable-based rules.
+   */
+  function removePropertyFromGroupSelectors(css, selector, property) {
+    const ruleRegex = /([^{}]+,[^{}]+)\{([^}]*)\}/g;
+    return css.replace(ruleRegex, (match, selPart, body) => {
+      const selRegex = new RegExp(`(?:^|[\\s,])${selector}(?:[\\s,{]|$)`);
+      if (!selRegex.test(selPart)) return match;
+      const propRegex = new RegExp(`[ \\t]*${property}\\s*:[^;]*;\\n?`);
+      if (!propRegex.test(body)) return match;
+      const newBody = body.replace(propRegex, '');
+      return selPart + '{' + newBody + '}';
+    });
+  }
+
   /**
    * Remove a CSS variable from :root.
    */
