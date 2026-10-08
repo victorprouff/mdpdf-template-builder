@@ -33,7 +33,7 @@ const Preview = (() => {
 
   function stripForPreview(css) {
     return css
-      .replace(/@page\s*\{[^}]*(?:\{[^}]*\}[^}]*)*\}/gs, '')
+      .replace(/@page\s*\{(?:[^{}]|\{[^{}]*\})*\}/gs, '')
       .replace(/position\s*:\s*running\([^)]+\)\s*;/g, '')
       .replace(/page-break-after\s*:\s*avoid\s*;/g, '')
       .replace(/page-break-inside\s*:\s*avoid\s*;/g, '');

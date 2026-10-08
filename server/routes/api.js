@@ -211,7 +211,7 @@ function stripPageRules(css) {
   const margins = { top: '20px', right: '10mm', bottom: '20px', left: '10mm' };
 
   // Extract margins from @page
-  const pageMatch = css.match(/@page\s*\{[^}]*(?:\{[^}]*\}[^}]*)*\}/s);
+  const pageMatch = css.match(/@page\s*\{(?:[^{}]|\{[^{}]*\})*\}/s);
   if (pageMatch) {
     const pageBlock = pageMatch[0];
     const mt = pageBlock.match(/margin-top\s*:\s*([^;]+);/);
@@ -226,7 +226,7 @@ function stripPageRules(css) {
 
   // Remove @page block and running() positions (not supported in browser)
   let previewCss = css
-    .replace(/@page\s*\{[^}]*(?:\{[^}]*\}[^}]*)*\}/gs, '')
+    .replace(/@page\s*\{(?:[^{}]|\{[^{}]*\})*\}/gs, '')
     .replace(/position\s*:\s*running\([^)]+\)\s*;/g, '')
     .replace(/page-break-after\s*:\s*avoid\s*;/g, '')
     .replace(/page-break-inside\s*:\s*avoid\s*;/g, '');

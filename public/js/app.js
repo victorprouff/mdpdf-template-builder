@@ -529,20 +529,24 @@
       .map(s => `    margin-${s}: ${margins[s]};`)
       .join('\n');
 
-    const pageMatch = css.match(/@page\s*\{([^}]*)\}/);
+    const pageMatch = css.match(/@page\s*\{((?:[^{}]|\{[^{}]*\})*)\}/);
     if (pageMatch) {
-      let body = pageMatch[1];
-      // Remove existing margin declarations (shorthand and individual)
-      body = body.replace(/\s*margin\s*:[^;]*;/g, '');
+      const fullBody = pageMatch[1];
+      // Split into preamble (before any nested at-rules) and nested blocks (@top-left, etc.)
+      const nestedStart = fullBody.search(/@[a-z-]+\s*\{/);
+      let preamble = nestedStart === -1 ? fullBody : fullBody.slice(0, nestedStart);
+      const nested = nestedStart === -1 ? '' : fullBody.slice(nestedStart);
+      // Remove existing margin declarations from preamble only
+      preamble = preamble.replace(/\s*margin\s*:[^;]*;/g, '');
       sides.forEach(s => {
-        body = body.replace(new RegExp(`\\s*margin-${s}\\s*:[^;]*;`, 'g'), '');
+        preamble = preamble.replace(new RegExp(`\\s*margin-${s}\\s*:[^;]*;`, 'g'), '');
       });
       // Clean up extra blank lines
-      body = body.replace(/\n{3,}/g, '\n\n');
-      // Add new margin declarations
-      const trimmed = body.trimEnd();
-      const newBody = trimmed + '\n' + decls + '\n';
-      return css.replace(/@page\s*\{[^}]*\}/, `@page {${newBody}}`);
+      preamble = preamble.replace(/\n{3,}/g, '\n\n');
+      // Reconstruct: preamble + new margins + nested blocks
+      const trimmed = preamble.trimEnd();
+      const newBody = trimmed + '\n' + decls + '\n' + (nested ? '\n' + nested : '');
+      return css.replace(/@page\s*\{(?:[^{}]|\{[^{}]*\})*\}/, `@page {${newBody}}`);
     }
 
     // No @page block exists, create one
